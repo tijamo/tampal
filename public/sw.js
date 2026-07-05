@@ -30,8 +30,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Supabase carries personal data and must never be cached. Detect it by host
+// (Supabase Cloud) OR by API path prefix, so a self-hosted instance behind a
+// custom domain (e.g. https://api.tamfam.example) is still treated as off-limits.
+const SUPABASE_API_PREFIXES = ['/rest/v1', '/auth/v1', '/realtime/v1', '/storage/v1', '/functions/v1'];
+
 function isSupabase(url) {
-  return url.hostname.endsWith('.supabase.co');
+  if (url.hostname.endsWith('.supabase.co')) return true;
+  return SUPABASE_API_PREFIXES.some((p) => url.pathname.startsWith(p));
 }
 
 self.addEventListener('fetch', (event) => {

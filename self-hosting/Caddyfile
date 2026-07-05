@@ -1,0 +1,13 @@
+# Caddy reverse proxy: automatic HTTPS (Let's Encrypt) for the API gateway and
+# the Next.js app. Point both DNS records at this server, then run Caddy on the
+# host (or add it as another compose service). Replace the domains.
+
+api.tamfam.example {
+	# Fronts the Supabase API gateway (Kong).
+	reverse_proxy localhost:8000
+}
+
+tamfam.example {
+	# Fronts the Next.js app (`npm run start` / your Node host on :3000).
+	reverse_proxy localhost:3000
+}

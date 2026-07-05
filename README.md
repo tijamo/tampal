@@ -41,6 +41,10 @@ data model is shaped around protecting it:
 
 ## Getting started
 
+> **Prefer to self-host?** To avoid egress caps and keep full control of the data,
+> run the Supabase stack on your own server — see [`self-hosting/README.md`](./self-hosting/README.md).
+> The app is identical either way; only the `NEXT_PUBLIC_SUPABASE_URL` differs.
+
 ### 1. Create the Supabase project
 
 Create a project in the **London (`eu-west-2`)** region, then apply the migrations

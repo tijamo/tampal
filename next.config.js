@@ -3,6 +3,23 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {
+    // Allow the browser to reach the Supabase API, whether it's Supabase Cloud
+    // (*.supabase.co) or a self-hosted instance on a custom domain. We derive the
+    // self-hosted origin from NEXT_PUBLIC_SUPABASE_URL so the CSP isn't hardwired.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    let selfHosted = '';
+    if (supabaseUrl) {
+      try {
+        const { protocol, host } = new URL(supabaseUrl);
+        if (!host.endsWith('.supabase.co')) {
+          const ws = protocol === 'https:' ? 'wss:' : 'ws:';
+          selfHosted = ` ${protocol}//${host} ${ws}//${host}`;
+        }
+      } catch {
+        /* ignore malformed URL; fall back to the *.supabase.co wildcard */
+      }
+    }
+
     // Security headers. The app uses only strictly-necessary auth cookies and no
     // third-party scripts, so a tight CSP is achievable.
     const csp = [
@@ -13,7 +30,7 @@ const nextConfig = {
       "img-src 'self' data: blob:",
       "font-src 'self'",
       // Supabase REST/Realtime endpoints are reached from the browser.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co${selfHosted}`,
       "manifest-src 'self'",
       "worker-src 'self'",
       "frame-ancestors 'none'",
