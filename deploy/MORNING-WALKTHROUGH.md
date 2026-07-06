@@ -163,14 +163,22 @@ Generate your own login link directly from the auth server, then promote yoursel
 
 ```bash
 # get a one-time magic link (prints JSON containing "action_link")
+# redirect_to must be /login (a public route) -- admin-generated links use the
+# implicit flow (tokens in the URL fragment), which /auth/callback can't consume
+# (it only handles the PKCE ?code= flow used by the normal in-app email link).
+# /login detects the fragment tokens client-side and signs you in.
 curl -s -X POST "https://api.tampal.tijamo.com/auth/v1/admin/generate_link" \
   -H "apikey: <SERVICE_ROLE_KEY>" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"type":"magiclink","email":"you@tampal.tijamo.com"}'
+  -d '{"type":"magiclink","email":"you@tampal.tijamo.com","redirect_to":"https://app.tampal.tijamo.com/login"}' \
+  | jq -r '.action_link'
 ```
 
-Copy the `action_link` value, open it in your browser → you're signed in. Then:
+Copy the `action_link` value (use `jq -r` as above, not a manual copy — Go's JSON
+encoder escapes `&` as the literal six characters backslash-u-zero-zero-two-six, which breaks the
+URL's query string if pasted raw), open it in your browser → you're signed in.
+Then:
 
 ```bash
 docker exec -i "$DB" psql -U postgres -d postgres -c \

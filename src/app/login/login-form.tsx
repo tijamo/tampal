@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, Card, Field, Banner } from '@/components/ui';
 
@@ -13,6 +13,24 @@ import { Button, Card, Field, Banner } from '@/components/ui';
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  useEffect(() => {
+    // Admin-generated links (e.g. `auth/v1/admin/generate_link`, used to bootstrap
+    // the first user without SMTP) use the implicit flow: the session tokens arrive
+    // in the URL fragment rather than a `?code=` param, so /auth/callback's PKCE
+    // exchange can't pick them up. Consume them here instead, since /login is the
+    // one public route the middleware won't redirect away from first.
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const access_token = hash.get('access_token');
+    const refresh_token = hash.get('refresh_token');
+    if (access_token && refresh_token) {
+      createClient()
+        .auth.setSession({ access_token, refresh_token })
+        .then(({ error }) => {
+          if (!error) window.location.assign('/');
+        });
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
