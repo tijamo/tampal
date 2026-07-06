@@ -30,6 +30,12 @@ export function createClient() {
           }
         },
       },
+      // Next.js patches global fetch to cache GET requests by default; without
+      // this, a Server Component's Supabase queries can be served stale by the
+      // Data Cache instead of re-checking RLS-gated, per-user data on refresh.
+      global: {
+        fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
+      },
     },
   );
 }

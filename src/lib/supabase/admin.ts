@@ -12,5 +12,10 @@ export function createAdminClient() {
   if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
   return createSbClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
     auth: { autoRefreshToken: false, persistSession: false },
+    // Next.js patches global fetch to cache GET requests by default; disable
+    // that so admin reads (invites, GDPR export/erasure) are never stale.
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
+    },
   });
 }
