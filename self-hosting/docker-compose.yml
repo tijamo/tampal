@@ -57,12 +57,12 @@ services:
       API_EXTERNAL_URL: ${API_EXTERNAL_URL}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      # Without this, GoTrue creates its tables (schema_migrations, users, ...)
-      # in the "public" schema by default — but supabase_auth_admin only owns
-      # the "auth" schema (see db/init/00-init.sh), causing
-      # "permission denied for schema public". Every RLS policy and trigger in
-      # our own migrations also assumes auth.users lives in the auth schema.
-      GOTRUE_DB_NAMESPACE: auth
+      # NOTE: GoTrue has no env var to choose its schema — it issues unqualified
+      # table names, so which schema it lands in is controlled by the
+      # connecting role's Postgres `search_path`, set on supabase_auth_admin in
+      # db/init/00-init.sh (ALTER ROLE ... SET search_path = auth). Without
+      # that, GoTrue tries to create its tables in "public" and fails with
+      # "permission denied for schema public".
       GOTRUE_SITE_URL: ${SITE_URL}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}

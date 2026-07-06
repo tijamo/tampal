@@ -48,6 +48,13 @@ psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
   CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION supabase_auth_admin;
   GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;
 
+  -- GoTrue issues UNQUALIFIED table names (e.g. "schema_migrations", no schema
+  -- prefix), which Postgres resolves via the connecting role's search_path.
+  -- Without this, supabase_auth_admin falls back to the default search_path
+  -- ("$user", public) and tries to create GoTrue's tables in "public", where it
+  -- has no privileges -> "permission denied for schema public".
+  ALTER ROLE supabase_auth_admin SET search_path = auth;
+
   CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb
     LANGUAGE sql STABLE AS \$\$
       SELECT coalesce(
