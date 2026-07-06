@@ -49,7 +49,10 @@ This runs `../supabase/migrations/0001_init.sql` and `0002_retention.sql`
 
 ## 4. Put HTTPS in front
 
-Point the app and API subdomains at the server and run the reverse proxy
+For this **non-Coolify** path, Caddy runs on the host and needs to reach Kong on a
+host port, so first **uncomment the `ports:` block** under the `kong` service in
+`docker-compose.yml` (it's commented out by default because Coolify routes to Kong
+internally). Then `docker compose up -d` again, and run the reverse proxy
 (`Caddyfile` included) for automatic TLS:
 
 ```bash

@@ -92,8 +92,9 @@ directly in Steps 5 and 7. (Ask Claude to make the repo public first.)
    (SMTP can stay as dummy values for now — see Step 8.)
 5. **Domain for the API:** in the resource's settings, find the **`kong`** service and
    set its domain to `https://api.tampal.tijamo.com`, port **8000**. Let Coolify's
-   proxy handle HTTPS. If Coolify complains about a published-port clash on 8000,
-   edit the compose in the UI and change kong's `ports:` line to `expose:`.
+   proxy handle HTTPS. (Kong no longer publishes a host port — Coolify's dashboard
+   uses 8000 itself — so there's no port clash; the compose already `expose`s it and
+   Coolify routes the domain internally.)
 6. **Deploy.** Watch the logs until **db** and **auth** are healthy (a minute or two).
 
 ---

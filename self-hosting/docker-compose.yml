@@ -118,9 +118,18 @@ services:
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
     volumes:
       - ./volumes/kong/kong.yml:/home/kong/temp.yml:ro
-    # This is the public API gateway. Put Caddy/your reverse proxy in front for TLS.
-    ports:
-      - "${KONG_HTTP_PORT:-8000}:8000/tcp"
+    # Public API gateway on internal port 8000.
+    #
+    # Under COOLIFY (default): do NOT publish a host port — Coolify's own
+    # dashboard already uses 8000, and its proxy routes your api.* domain to this
+    # container internally. So we only `expose` the port.
+    #
+    # For a NON-Coolify host with a reverse proxy running on the host (e.g. the
+    # bundled Caddyfile), uncomment the `ports:` block below to publish it.
+    expose:
+      - "8000"
+    # ports:
+    #   - "${KONG_HTTP_PORT:-8000}:8000/tcp"
 
   studio:
     image: supabase/studio:2025.06.30-sha-6f5982d
