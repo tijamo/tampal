@@ -53,14 +53,19 @@ export function AttendanceRegister({
     setState((s) => ({ ...s, [personId]: 'saving' }));
 
     if (navigator.onLine) {
-      const supabase = createClient();
-      const { error } = await supabase.from('attendance').upsert(
-        { meeting_id: meetingId, occurrence_date: date, person_id: personId, present: next },
-        { onConflict: 'meeting_id,occurrence_date,person_id' },
-      );
-      if (!error) {
-        setState((s) => ({ ...s, [personId]: 'saved' }));
-        return;
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from('attendance').upsert(
+          { meeting_id: meetingId, occurrence_date: date, person_id: personId, present: next },
+          { onConflict: 'meeting_id,occurrence_date,person_id' },
+        );
+        if (!error) {
+          setState((s) => ({ ...s, [personId]: 'saved' }));
+          return;
+        }
+      } catch {
+        // Network/fetch exception (e.g. flaky connection) — fall through to
+        // the offline queue below rather than losing this attendance mark.
       }
     }
     // Offline or the write failed: queue for background sync.
