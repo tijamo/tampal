@@ -104,10 +104,20 @@ services:
     depends_on:
       - auth
       - rest
-    # Kong's declarative config can't read env vars, so we envsubst the
-    # image-baked template into kong.yml at startup (mirrors Supabase's official
-    # self-hosting setup) — no runtime bind-mount involved.
-    entrypoint: bash -c 'eval "echo \"$$(cat ~/kong.yml.template)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    # Kong's declarative config can't read env vars directly, so we substitute
+    # the two $SUPABASE_*_KEY tokens into the image-baked template at container
+    # start using `sed` (NOT the classic `eval "echo \"$(cat ...)\""` trick —
+    # that re-parses the whole YAML as a shell command, and breaks as soon as the
+    # file contains its own embedded quotes, e.g. `_format_version: "2.1"`).
+    # NOTE: every $ below is doubled ($$) because Compose itself interpolates
+    # $VAR in compose-file strings before the container ever sees them; $$ is
+    # how you get a literal single $ through to the container's shell.
+    entrypoint: >
+      bash -c '
+      sed -e "s|\$$SUPABASE_ANON_KEY|$$SUPABASE_ANON_KEY|g"
+          -e "s|\$$SUPABASE_SERVICE_KEY|$$SUPABASE_SERVICE_KEY|g"
+          /home/kong/kong.yml.template > /home/kong/kong.yml
+      && /docker-entrypoint.sh kong docker-start'
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
