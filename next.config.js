@@ -5,6 +5,14 @@ const nextConfig = {
   // Emit a self-contained server bundle (.next/standalone) for the Docker image
   // used by Coolify / any container host. Ignored by adapters like Netlify.
   output: 'standalone',
+  experimental: {
+    // Next 14's client Router Cache otherwise keeps a stale snapshot of a
+    // visited page for up to 30s, so navigating back after adding a person or
+    // meeting can show the old list even though revalidatePath() already
+    // refreshed the server-side data. This data is per-user and RLS-gated, so
+    // it must always be fresh, not served from an in-memory client cache.
+    staleTimes: { dynamic: 0, static: 0 },
+  },
   async headers() {
     // Allow the browser to reach the Supabase API, whether it's Supabase Cloud
     // (*.supabase.co) or a self-hosted instance on a custom domain. We derive the
