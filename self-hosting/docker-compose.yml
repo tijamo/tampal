@@ -22,7 +22,7 @@ name: tamfam
 
 services:
   db:
-    image: supabase/postgres:15.8.1.060
+    build: ./db
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
@@ -39,8 +39,8 @@ services:
       JWT_EXP: 3600
     volumes:
       - db-data:/var/lib/postgresql/data
-      # Runs once on an empty data volume: sets up roles + auth compat helpers.
-      - ./volumes/db/init:/docker-entrypoint-initdb.d:ro
+      # The role/auth-helper init script is baked into the image (./db/Dockerfile)
+      # so it always runs, regardless of host bind-mount path resolution.
     # Not published to the host by default — only the internal network needs it.
     expose:
       - "5432"
@@ -99,14 +99,15 @@ services:
       - "3000"
 
   kong:
-    image: kong:2.8.1
+    build: ./kong
     restart: unless-stopped
     depends_on:
       - auth
       - rest
-    # Kong's declarative config can't read env vars, so we envsubst the template
-    # into kong.yml at startup (mirrors Supabase's official self-hosting setup).
-    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    # Kong's declarative config can't read env vars, so we envsubst the
+    # image-baked template into kong.yml at startup (mirrors Supabase's official
+    # self-hosting setup) — no runtime bind-mount involved.
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/kong.yml.template)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
@@ -116,8 +117,6 @@ services:
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-    volumes:
-      - ./volumes/kong/kong.yml:/home/kong/temp.yml:ro
     # Public API gateway on internal port 8000.
     #
     # Under COOLIFY (default): do NOT publish a host port — Coolify's own

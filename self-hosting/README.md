@@ -121,5 +121,5 @@ docker compose exec -T db pg_dump -U postgres -d postgres --no-owner \
 - **Updates**: bump the image tags in `docker-compose.yml` deliberately and test
   in a staging copy; GoTrue/PostgREST run their own migrations on start.
 - If you hit a roles/permissions edge case with a newer `supabase/postgres` image,
-  cross-check `volumes/db/init/00-init.sh` against Supabase's current official
+  cross-check `db/init/00-init.sh` against Supabase's current official
   `docker/volumes/db` scripts — the role model there is the source of truth.
