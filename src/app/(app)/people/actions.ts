@@ -4,10 +4,16 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ConsentType, PersonType } from '@/lib/supabase/types';
 
 export interface PersonFormState {
   error?: string;
+}
+
+export interface InviteState {
+  error?: string;
+  success?: string;
 }
 
 function str(form: FormData, key: string): string | null {
@@ -144,4 +150,49 @@ export async function erasePerson(personId: string) {
 
   revalidatePath('/people');
   redirect('/people');
+}
+
+/**
+ * Turns a `people` record into a logged-in user by sending a Supabase invite
+ * email. The person_id travels in the invite's user metadata so the
+ * handle_new_user() trigger links the resulting profile back to this record.
+ */
+export async function invitePerson(personId: string, email: string): Promise<InviteState> {
+  await requireAdmin();
+
+  if (!email) return { error: 'This person has no email address on file to invite.' };
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { person_id: personId },
+    redirectTo: siteUrl ? `${siteUrl}/auth/callback` : undefined,
+  });
+
+  if (error) {
+    return /already been registered|already exists/i.test(error.message)
+      ? { error: 'This email address already has a user account.' }
+      : { error: 'Could not send the invite. Please try again.' };
+  }
+
+  revalidatePath(`/people/${personId}`);
+  return { success: 'Invite sent.' };
+}
+
+/**
+ * Grants or revokes admin rights on an already-linked user. Refuses to let an
+ * admin change their own role here, so they can't accidentally lock
+ * themselves out.
+ */
+export async function setUserRole(targetUserId: string, personId: string, isAdmin: boolean) {
+  const { userId } = await requireAdmin();
+  if (targetUserId === userId) return;
+
+  const supabase = createClient();
+  await supabase
+    .from('profiles')
+    .update({ role: isAdmin ? 'admin' : 'member' })
+    .eq('user_id', targetUserId);
+
+  revalidatePath(`/people/${personId}`);
 }

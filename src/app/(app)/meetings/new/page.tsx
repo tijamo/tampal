@@ -11,7 +11,7 @@ export default async function NewMeetingPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeading>Add a meeting</PageHeading>
-      <MeetingForm action={createMeeting} />
+      <MeetingForm action={createMeeting} mode="create" />
     </div>
   );
 }

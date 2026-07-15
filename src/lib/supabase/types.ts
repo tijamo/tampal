@@ -4,7 +4,7 @@
 export type Role = 'admin' | 'member';
 export type PersonType = 'member' | 'visitor';
 export type Recurrence = 'none' | 'weekly' | 'monthly' | 'annually';
-export type ConsentType = 'attendance_records' | 'contact_storage';
+export type ConsentType = 'attendance_records' | 'contact_storage' | 'directory_listing';
 
 export interface Person {
   id: string;

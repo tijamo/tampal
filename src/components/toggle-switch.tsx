@@ -2,39 +2,38 @@
 
 import { useTransition } from 'react';
 import * as Switch from '@radix-ui/react-switch';
-import type { ConsentType } from '@/lib/supabase/types';
-import { setConsent } from '@/app/(app)/people/actions';
 
 /**
- * Accessible on/off consent switch. Persists each change as a new append-only
- * consent record via the server action, preserving the full history.
+ * Accessible on/off switch used for consent toggles and role toggles alike.
+ * The caller owns persistence via `onToggle`; this component only renders
+ * and manages pending state.
  */
-export function ConsentToggle({
-  personId,
-  type,
+export function ToggleSwitch({
+  id,
   label,
   granted,
+  onToggle,
 }: {
-  personId: string;
-  type: ConsentType;
+  id: string;
   label: string;
   granted: boolean;
+  onToggle: (granted: boolean) => void | Promise<void>;
 }) {
   const [pending, startTransition] = useTransition();
-  const id = `consent-${type}`;
+  const domId = `toggle-${id}`;
 
   return (
     <div className="flex items-center justify-between gap-4 py-2">
-      <label htmlFor={id} className="flex-1">
+      <label htmlFor={domId} className="flex-1">
         {label}
       </label>
       <Switch.Root
-        id={id}
+        id={domId}
         checked={granted}
         disabled={pending}
         onCheckedChange={(checked) =>
           startTransition(() => {
-            void setConsent(personId, type, checked);
+            void onToggle(checked);
           })
         }
         className="relative h-7 w-12 rounded-full bg-slate-300 data-[state=checked]:bg-brand-700 disabled:opacity-60 dark:bg-slate-600"

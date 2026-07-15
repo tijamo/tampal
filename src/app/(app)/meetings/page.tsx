@@ -57,16 +57,21 @@ export default async function MeetingsPage() {
                     </span>
                   </div>
                   {m.description && <p className="text-sm">{m.description}</p>}
-                  {isAdmin && (
-                    <div className="flex flex-wrap gap-3">
-                      {next && (
-                        <LinkButton href={`/register/${m.id}/${next.date}`}>
-                          Take register
+                  <div className="flex flex-wrap gap-3">
+                    {next && (
+                      <LinkButton href={`/register/${m.id}/${next.date}`}>
+                        Take register
+                      </LinkButton>
+                    )}
+                    {isAdmin && (
+                      <>
+                        <LinkButton variant="secondary" href={`/meetings/${m.id}/edit`}>
+                          Edit
                         </LinkButton>
-                      )}
-                      <ArchiveMeeting meetingId={m.id} title={m.title} />
-                    </div>
-                  )}
+                        <ArchiveMeeting meetingId={m.id} title={m.title} />
+                      </>
+                    )}
+                  </div>
                 </Card>
               </li>
             );

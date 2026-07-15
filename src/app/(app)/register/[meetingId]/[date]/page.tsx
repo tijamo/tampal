@@ -1,21 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { requireAdmin } from '@/lib/auth';
+import { requireSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeading } from '@/components/ui';
 import { AttendanceRegister, type RegisterPerson } from '@/components/attendance-register';
-import type { Meeting, Person, Consent, Attendance } from '@/lib/supabase/types';
+import type { Meeting, Attendance } from '@/lib/supabase/types';
 
 export const metadata: Metadata = { title: 'Attendance register' };
-
-/** Only people whose latest attendance consent is granted may be marked. */
-function hasAttendanceConsent(consents: Consent[], personId: string): boolean {
-  const rows = consents
-    .filter((c) => c.person_id === personId && c.consent_type === 'attendance_records')
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  return rows[0]?.granted ?? false;
-}
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -24,7 +16,7 @@ export default async function RegisterPage({
 }: {
   params: { meetingId: string; date: string };
 }) {
-  await requireAdmin();
+  await requireSession();
   if (!DATE_RE.test(params.date)) notFound();
   const supabase = createClient();
 
@@ -36,25 +28,27 @@ export default async function RegisterPage({
   if (!meeting) notFound();
   const m = meeting as Meeting;
 
-  const [{ data: peopleRows }, { data: consentRows }, { data: attendanceRows }] =
-    await Promise.all([
-      supabase.from('people').select('*').is('deleted_at', null).order('full_name'),
-      supabase.from('consents').select('*'),
-      supabase
-        .from('attendance')
-        .select('*')
-        .eq('meeting_id', params.meetingId)
-        .eq('occurrence_date', params.date),
-    ]);
+  // register_eligible_people already filters to people with a granted
+  // attendance-consent, so any authenticated user can take the register
+  // without needing raw access to the `people`/`consents` tables.
+  const [{ data: peopleRows }, { data: attendanceRows }] = await Promise.all([
+    supabase.from('register_eligible_people').select('*').order('full_name'),
+    supabase
+      .from('attendance')
+      .select('*')
+      .eq('meeting_id', params.meetingId)
+      .eq('occurrence_date', params.date),
+  ]);
 
-  const people = (peopleRows as Person[]) ?? [];
-  const consents = (consentRows as Consent[]) ?? [];
+  const people = (peopleRows as { id: string; full_name: string }[]) ?? [];
   const attendance = (attendanceRows as Attendance[]) ?? [];
   const presentSet = new Set(attendance.filter((a) => a.present).map((a) => a.person_id));
 
-  const register: RegisterPerson[] = people
-    .filter((p) => hasAttendanceConsent(consents, p.id))
-    .map((p) => ({ id: p.id, full_name: p.full_name, present: presentSet.has(p.id) }));
+  const register: RegisterPerson[] = people.map((p) => ({
+    id: p.id,
+    full_name: p.full_name,
+    present: presentSet.has(p.id),
+  }));
 
   return (
     <div className="flex flex-col gap-6">

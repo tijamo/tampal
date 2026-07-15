@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { LinkButton, Card, PageHeading } from '@/components/ui';
-import { ConsentToggle } from '@/components/consent-toggle';
+import { ToggleSwitch } from '@/components/toggle-switch';
 import { ErasePerson } from '@/components/erase-person';
-import type { Person, Consent, ConsentType } from '@/lib/supabase/types';
+import { InvitePerson } from '@/components/invite-person';
+import { setConsent, setUserRole } from '../actions';
+import type { Person, Consent, ConsentType, Profile } from '@/lib/supabase/types';
 
 export const metadata: Metadata = { title: 'Person' };
 
@@ -18,7 +20,7 @@ function latestConsent(consents: Consent[], type: ConsentType): boolean {
 }
 
 export default async function PersonDetailPage({ params }: { params: { id: string } }) {
-  await requireAdmin();
+  const { userId } = await requireAdmin();
   const supabase = createClient();
 
   const { data: person } = await supabase
@@ -31,11 +33,12 @@ export default async function PersonDetailPage({ params }: { params: { id: strin
   if (!person) notFound();
   const p = person as Person;
 
-  const { data: consentRows } = await supabase
-    .from('consents')
-    .select('*')
-    .eq('person_id', p.id);
+  const [{ data: consentRows }, { data: linkedProfileRow }] = await Promise.all([
+    supabase.from('consents').select('*').eq('person_id', p.id),
+    supabase.from('profiles').select('user_id, role').eq('person_id', p.id).maybeSingle(),
+  ]);
   const consents = (consentRows as Consent[]) ?? [];
+  const linkedProfile = linkedProfileRow as Pick<Profile, 'user_id' | 'role'> | null;
 
   const contact = [
     p.email,
@@ -88,18 +91,44 @@ export default async function PersonDetailPage({ params }: { params: { id: strin
           Consent
         </h2>
         <Card className="flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
-          <ConsentToggle
-            personId={p.id}
-            type="attendance_records"
+          <ToggleSwitch
+            id="attendance_records"
             label="Record attendance at meetings (reveals religious belief)"
             granted={latestConsent(consents, 'attendance_records')}
+            onToggle={setConsent.bind(null, p.id, 'attendance_records')}
           />
-          <ConsentToggle
-            personId={p.id}
-            type="contact_storage"
+          <ToggleSwitch
+            id="contact_storage"
             label="Store contact and address details"
             granted={latestConsent(consents, 'contact_storage')}
+            onToggle={setConsent.bind(null, p.id, 'contact_storage')}
           />
+        </Card>
+      </section>
+
+      <section aria-labelledby="account-heading">
+        <h2 id="account-heading" className="mb-2 text-xl font-semibold">
+          User account
+        </h2>
+        <Card className="flex flex-col gap-3">
+          {linkedProfile ? (
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                This person has a login
+                {linkedProfile.role === 'admin' ? ' with admin rights' : ''}.
+              </p>
+              {linkedProfile.user_id !== userId && (
+                <ToggleSwitch
+                  id="admin-role"
+                  label="Admin rights"
+                  granted={linkedProfile.role === 'admin'}
+                  onToggle={setUserRole.bind(null, linkedProfile.user_id, p.id)}
+                />
+              )}
+            </>
+          ) : (
+            <InvitePerson personId={p.id} email={p.email} />
+          )}
         </Card>
       </section>
 

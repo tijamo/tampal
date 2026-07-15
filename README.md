@@ -17,8 +17,11 @@ data model is shaped around protecting it:
 - People are only shown in a register **if their attendance consent is currently
   granted**.
 - **Row-Level Security** is enabled and default-deny on every table. Contact
-  details and attendance are visible to **administrators only** (and to each
-  person for their own records, for Subject Access Requests).
+  details remain visible to **administrators only** (and to each person for
+  their own record, for Subject Access Requests). Attendance is visible to
+  **any logged-in user**, since taking a register means seeing who's on it —
+  this is a deliberate trade-off documented as such, not an oversight; only
+  administrators can delete attendance records.
 - Every change to sensitive tables is written to an **audit log** by database
   triggers.
 - **Subject rights** are built in: per-person **JSON export** (access &
@@ -57,6 +60,9 @@ in order:
 
 - `supabase/migrations/0001_init.sql` — schema, RLS policies, `is_admin()`, audit triggers
 - `supabase/migrations/0002_retention.sql` — retention jobs (needs `pg_cron`)
+- `supabase/migrations/0003_grants.sql` — table grants (self-hosted only)
+- `supabase/migrations/0004_self_service.sql` — invite/person linking
+- `supabase/migrations/0005_self_service_rls.sql` — self-service RLS/RPCs
 
 Either run them via the Supabase SQL editor, or with the CLI:
 
@@ -91,8 +97,10 @@ update profiles set role = 'admin'
 where user_id = (select id from auth.users where email = 'you@example.org');
 ```
 
-Sign in at `/login` with the magic link. From then on, invite others via
-**Authentication → Users** and manage everything in the app.
+Sign in at `/login` with the magic link. From then on, invite other members
+as users directly from their person page in the app (**Invite as user**) —
+this links their login to their existing member record automatically. The
+manual Supabase-dashboard invite above is only needed for this first admin.
 
 ## Scripts
 
