@@ -80,20 +80,17 @@ All six landed together in `20527ec` (v0.1.3); see "What already exists"
 above for where each lives. `npm run typecheck`, `npm run lint`, and
 `npm test` all pass against this state.
 
-### Phase 2 — Compliance formalisation (next up)
-7. **UK GDPR / DPA 2018 / Data (Use and Access) Act 2025 review**
-   - Update `/privacy` page copy to reference the Data (Use and Access) Act
-     2025 alongside UK GDPR/DPA 2018.
-   - Add a clear complaints-handling section/contact (DUA 2025 places a duty
-     on controllers to facilitate data-subject complaints) — likely just a
-     documented process + email, not new code.
-   - Confirm no automated decision-making or bulk direct-marketing exists
-     (currently true) so the DUA's ADM/soft-opt-in provisions stay out of
-     scope; revisit if e-mail newsletters are ever added.
-   - This is policy/documentation work primarily — final sign-off on legal
-     wording is a church-trustee decision, not something the codebase can
-     certify (README already disclaims "not legal advice").
-8. **WCAG 2.2 AA gap audit**
+### Phase 2 — Compliance formalisation
+7. ✅ **UK GDPR / DPA 2018 / Data (Use and Access) Act 2025 review** (v0.1.6)
+   - `/privacy` now cites the Data (Use and Access) Act 2025 alongside UK
+     GDPR/DPA 2018, states plainly that we do no automated decision-making
+     or bulk marketing (so DUA's ADM/soft-opt-in provisions stay out of
+     scope), and has a dedicated "How to complain" section — internal route
+     first (30-day response target), ICO after, complaining to us optional.
+   - Wording is a starting point, not certified legal text — final
+     sign-off is still a church-trustee decision (README already disclaims
+     "not legal advice").
+8. **WCAG 2.2 AA gap audit** (next up)
    - Check new 2.2 success criteria against current UI: 2.4.11 Focus Not
      Obscured, 2.5.7 Dragging Movements (N/A — no drag interactions),
      2.5.8 Target Size Minimum (already ≥44px, likely passes), 3.2.6
