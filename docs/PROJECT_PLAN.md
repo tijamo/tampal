@@ -1,6 +1,6 @@
 # TamFam Project Plan — Context, Gap Analysis & Roadmap
 
-_Last updated: 2026-07-15. Update this document as phases land or requirements change._
+_Last updated: 2026-07-16. Update this document as phases land or requirements change._
 
 ## Purpose
 
@@ -30,10 +30,29 @@ and Data (Use and Access) Act 2025 compliant, and WCAG 2.2 AA accessible.
   (`eu-west-2`) hosting, PECR note (no analytics/cookies).
 - **Accessibility** — skip link, labelled fields, AA contrast tokens, ≥44px
   touch targets, `jest-axe` component tests.
-- **Missing entirely**: in-app invite flow (today: manual Supabase Studio
-  invite + manual SQL to promote to admin), self-service profile
-  view/edit, non-admin directory access, non-admin register-taking, meeting
-  edit page, in-app admin promotion, DUA 2025-specific privacy text.
+- **In-app invite flow** — "Invite as user" action on a person record
+  (`src/app/(app)/people/actions.ts` `invitePerson`, `components/invite-person.tsx`)
+  calls `inviteUserByEmail` with `person_id` in the metadata;
+  `handle_new_user()` (`0004_self_service.sql`) links the resulting profile
+  to that person automatically.
+- **Self-service profile editing** — `/profile` (`requireSession()`, not
+  admin) lets a linked user edit their own contact details via the
+  `update_own_contact_details` SECURITY DEFINER RPC
+  (`0005_self_service_rls.sql`), which whitelists exactly the editable
+  columns.
+- **Directory with opt-in contact visibility** — `/directory` (non-admin
+  nav entry) reads the `people_directory` view, which shows phone/email
+  only where a live `directory_listing` consent exists; opt-in/out is
+  self-service from `/profile` via `set_own_directory_consent`.
+- **Open register-taking** — `register/[meetingId]/[date]` now uses
+  `requireSession()`; `attendance` RLS allows any authenticated user to
+  insert/update (delete stays admin-only).
+- **In-app admin promotion** — `setUserRole` action + toggle on the person
+  detail page, admin-only, self-demotion blocked.
+- **Meeting edit page** — `meetings/[id]/edit` reuses `MeetingForm` in
+  `edit` mode.
+- **Missing entirely**: DUA 2025-specific privacy text, WCAG 2.2-specific
+  gap audit (see Phase 2).
 
 ## Product decisions on file
 
@@ -49,50 +68,19 @@ and Data (Use and Access) Act 2025 compliant, and WCAG 2.2 AA accessible.
 
 ## Roadmap
 
-### Phase 1 — Core requirements from the product brief
-1. **In-app invite-to-user flow**
-   - New admin action on a `people` record: "Invite as user" → calls
-     `createAdminClient().auth.admin.inviteUserByEmail(email, { data: {
-     person_id } })` (`src/lib/supabase/admin.ts` already exists for this,
-     currently unused).
-   - Update `handle_new_user()` trigger (new migration) to read
-     `new.raw_user_meta_data->>'person_id'` so the auto-created `profiles`
-     row links to the right `people.id` instead of `null`.
-   - Guard against re-inviting/double-inviting the same person; surface
-     invite state on the person detail page.
-2. **Self-service profile editing**
-   - New route (e.g. `/profile`) using `requireSession()` (not
-     `requireAdmin()`) that loads the caller's own `people` row via
-     `profiles.person_id` and lets them edit contact fields.
-   - New RLS policy `people_update_own` restricted to safe self-editable
-     columns (contact/address only — not `person_type`, `notes`,
-     `deleted_at`) — likely via a `security definer` RPC or a `check`
-     constraint approach rather than a blanket self-`UPDATE` grant, since
-     Postgres RLS can't easily restrict *which columns* an UPDATE touches.
-3. **Directory with opt-in contact visibility**
-   - New `consent_type = 'directory_listing'` value + migration.
-   - Replace/extend `people_directory` view: name+type for everyone;
-     phone/email included only where a live `directory_listing` consent is
-     granted.
-   - New non-admin-visible nav entry + page (e.g. `/directory`), distinct
-     from the existing admin-only `/people` management screens.
-4. **Open up register-taking to all authenticated users**
-   - Change `register/[meetingId]/[date]/page.tsx` (and its server action)
-     from `requireAdmin()` to `requireSession()`.
-   - New RLS policy on `attendance` allowing any authenticated user to
-     insert/update rows (keep delete admin-only), setting `recorded_by =
-     auth.uid()`.
-   - Nav: make sure the register link itself doesn't assume admin.
-5. **In-app admin promotion**
-   - Admin-only control (e.g. on a person/profile page once linked to a
-     user) to toggle `profiles.role` between `member`/`admin`, using the
-     existing `profiles_admin_write` RLS policy (already permits this —
-     just needs UI + a server action).
-6. **Meeting edit page**
-   - Add `meetings/[id]/edit` + action, reusing `components/meeting-form.tsx`
-     (currently create-only) and the existing `meetings_admin_write` policy.
+### Phase 1 — Core requirements from the product brief — ✅ DONE (v0.1.3)
+1. ✅ In-app invite-to-user flow.
+2. ✅ Self-service profile editing.
+3. ✅ Directory with opt-in contact visibility.
+4. ✅ Open up register-taking to all authenticated users.
+5. ✅ In-app admin promotion.
+6. ✅ Meeting edit page.
 
-### Phase 2 — Compliance formalisation
+All six landed together in `20527ec` (v0.1.3); see "What already exists"
+above for where each lives. `npm run typecheck`, `npm run lint`, and
+`npm test` all pass against this state.
+
+### Phase 2 — Compliance formalisation (next up)
 7. **UK GDPR / DPA 2018 / Data (Use and Access) Act 2025 review**
    - Update `/privacy` page copy to reference the Data (Use and Access) Act
      2025 alongside UK GDPR/DPA 2018.
@@ -124,19 +112,14 @@ and Data (Use and Access) Act 2025 compliant, and WCAG 2.2 AA accessible.
 11. Revisit self-hosted Supabase/Coolify deploy path hardening given the
     history of Kong/auth/schema-permission fix commits.
 
-## Files most relevant to Phase 1
+## Files most relevant to Phase 2
 
-- `src/lib/supabase/admin.ts`, `src/lib/auth.ts` — invite/session plumbing.
-- `supabase/migrations/0001_init.sql` — schema/RLS being extended (via new
-  migration files, not edits to this one, per standard Supabase practice).
-- `src/app/(app)/people/actions.ts`, `components/person-form.tsx`,
-  `components/consent-toggle.tsx` — patterns to follow for the new invite
-  action and directory-consent toggle.
-- `src/app/(app)/register/[meetingId]/[date]/page.tsx`,
-  `components/attendance-register.tsx` — permission change site.
-- `src/components/app-nav.tsx` — nav entries for `/profile` and `/directory`.
-- `src/app/(app)/meetings/actions.ts`, `components/meeting-form.tsx` — reuse
-  for the new edit page.
+- `src/app/privacy/page.tsx` — privacy notice copy to extend with DUA 2025
+  references and a complaints-handling section.
+- `README.md` — disclaims "not legal advice"; also carries the "WCAG 2.1 AA"
+  claim to update once the 2.2 audit lands.
+- `__tests__/a11y.test.tsx` — existing `jest-axe` coverage to extend for
+  `/profile`, `/directory`, and the meeting edit page.
 
 ## Verification checklist (per phase)
 
