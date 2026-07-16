@@ -1,6 +1,6 @@
 {
   "name": "tamfam",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "private": true,
   "description": "TamFam — Tamworth Christadelphian Church PWA for members, meetings and attendance",
   "scripts": {
