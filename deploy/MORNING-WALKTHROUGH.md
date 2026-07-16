@@ -68,7 +68,7 @@ directly in Steps 5 and 7. (Ask Claude to make the repo public first.)
 1. **+ New Resource** → (scroll to **Git Based**) → **Public Repository** (or
    **Private Repository (with Deploy Key)**).
 2. Repository: `https://github.com/tijamo/tampal`  ·  Branch:
-   `claude/tamfam-church-pwa-ixtasz`.
+   `main`.
 3. **Build Pack → Docker Compose.** Set **both** of these (Coolify resolves the
    compose file's relative paths — `build: ./db`, `build: ./kong` — against
    **Base Directory**, not against the compose file's own folder, so both must
@@ -117,7 +117,7 @@ DB=$(docker ps --format '{{.Names}}' | grep -i db | head -1)
 docker exec -i "$DB" psql -U postgres -d postgres -tAc "select to_regclass('auth.users') is not null"
 
 # get the schema files and apply them
-git clone -b claude/tamfam-church-pwa-ixtasz https://github.com/tijamo/tampal.git
+git clone -b main https://github.com/tijamo/tampal.git
 for f in tampal/supabase/migrations/*.sql; do
   echo "applying $f"
   docker exec -i "$DB" psql -v ON_ERROR_STOP=1 -U postgres -d postgres < "$f"
@@ -133,7 +133,7 @@ GitHub token.)
 
 1. In the **TamFam** project: **+ New Resource** → **Public Repository** (same repo).
 2. Repository `https://github.com/tijamo/tampal` · Branch
-   `claude/tamfam-church-pwa-ixtasz` · **Build Pack → Dockerfile** (location
+   `main` · **Build Pack → Dockerfile** (location
    `/Dockerfile`).
 3. **Build-time variables** — tick **"Build Variable"** for each (these get baked into
    the front-end at build time):
@@ -214,7 +214,7 @@ You don't strictly need Coolify. On the server you can run the whole backend wit
 command and put Caddy in front for HTTPS:
 
 ```bash
-git clone -b claude/tamfam-church-pwa-ixtasz https://github.com/tijamo/tampal.git
+git clone -b main https://github.com/tijamo/tampal.git
 cd tampal/self-hosting
 cp .env.example .env   # fill in secrets (node gen-keys.mjs) + domains
 docker compose up -d

@@ -44,8 +44,13 @@ them **after** the stack is healthy:
 ./migrate.sh
 ```
 
-This runs `../supabase/migrations/0001_init.sql` and `0002_retention.sql`
-(schema, RLS, audit triggers, retention jobs).
+This applies every file in `../supabase/migrations/` in order (currently
+`0001_init.sql` through `0005_self_service_rls.sql`: schema, RLS, audit
+triggers, retention jobs, and — critically for a self-hosted stack —
+`0003_grants.sql`'s table-level `GRANT`s, without which every query fails
+with "permission denied for table x" before RLS is even consulted, since
+Supabase Cloud grants these automatically but a self-hosted stack has no
+equivalent bootstrap).
 
 ## 4. Put HTTPS in front
 

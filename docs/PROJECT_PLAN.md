@@ -162,8 +162,32 @@ above for where each lives. `npm run typecheck`, `npm run lint`, and
     typescript` instead of hand-maintaining it. Blocked here too: needs
     either a linked Supabase project or a local stack, neither available in
     this environment/session.
-11. Revisit self-hosted Supabase/Coolify deploy path hardening given the
-    history of Kong/auth/schema-permission fix commits.
+11. ✅ **Self-hosted/Coolify deploy path review** (v0.1.10)
+    - Read `docker-compose.yml`, `db/init/00-init.sh`, `kong/`, `migrate.sh`,
+      `gen-keys.mjs` against the fix-commit history (Kong YAML-folding
+      crash, auth `search_path`/ownership collisions, missing table
+      grants). Current state is internally consistent and each historical
+      fix is now commented in place — no regressions found. Cross-checked
+      every `${VAR}` `docker-compose.yml` references against
+      `self-hosting/.env.example`: nothing missing either way.
+    - Found and fixed two real doc-drift bugs, not the config itself:
+      1. `self-hosting/README.md` step 3 said `migrate.sh` runs only
+         `0001_init.sql` and `0002_retention.sql` — stale since `0003`–`0005`
+         were added. Worth fixing specifically because `0003_grants.sql` is
+         the one whose own comment says a self-hosted stack gets
+         **"permission denied for table x" on every query** without it —
+         exactly the class of bug this project's fix history shows is easy
+         to hit and hard to debug from the error message alone.
+      2. `deploy/MORNING-WALKTHROUGH.md` told the operator to deploy from
+         git branch `claude/tamfam-church-pwa-ixtasz` in four places. That
+         branch is real but is 10 commits behind `main` (confirmed via
+         `git merge-base --is-ancestor`) — it predates all of Phase 1, 2 and
+         3. Following the walkthrough today would deploy a build missing
+         the invite flow, self-service profile/directory, the WCAG fixes,
+         and the DUA 2025 privacy copy. Repointed all four to `main`.
+    - `deploy/coolify.md` was already correct (uses `*.sql` glob language,
+      no branch pinning) — not every self-hosting doc had drifted, just the
+      one written for one specific one-off deployment session.
 
 ## Files most relevant to Phase 3
 
