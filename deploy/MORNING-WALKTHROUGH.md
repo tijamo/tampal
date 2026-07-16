@@ -87,11 +87,11 @@ directly in Steps 5 and 7. (Ask Claude to make the repo public first.)
    SITE_URL=https://app.tampal.tijamo.com
    ADDITIONAL_REDIRECT_URLS=https://app.tampal.tijamo.com/auth/callback
    KONG_HTTP_PORT=8000
-   SMTP_HOST=smtp.example.com
+   SMTP_HOST=smtp-relay.brevo.com
    SMTP_PORT=587
    SMTP_USER=changeme
    SMTP_PASS=changeme
-   SMTP_ADMIN_EMAIL=admin@tampal.tijamo.com
+   SMTP_ADMIN_EMAIL=tim@tijamo.com
    SMTP_SENDER_NAME=TamFam
    ```
    (SMTP can stay as dummy values for now — see Step 8.)
