@@ -12,7 +12,8 @@ export default function PrivacyPage() {
         <h1 className="text-3xl font-bold">Privacy notice</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           How {controllerName} (&ldquo;we&rdquo;) collects and uses your personal data in the
-          TamFam app, under the UK GDPR and the Data Protection Act 2018.
+          TamFam app, under the UK GDPR, the Data Protection Act 2018, and the Data (Use and
+          Access) Act 2025.
         </p>
 
         <Section title="Who is responsible for your data">
@@ -85,6 +86,14 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Automated decisions and marketing">
+          <p>
+            We do not use your data for any automated decision-making or profiling, and we do not
+            send bulk marketing or newsletter emails. If that ever changes, we will update this
+            notice first and seek any separate consent the law requires before doing so.
+          </p>
+        </Section>
+
         <Section title="Your rights">
           <p>You have the right to:</p>
           <ul className="list-disc pl-6">
@@ -98,12 +107,28 @@ export default function PrivacyPage() {
             <a href={`mailto:${controllerEmail}`} className="text-brand-700 underline">
               {controllerEmail}
             </a>
-            . You also have the right to complain to the Information Commissioner&rsquo;s Office
-            (ICO) at{' '}
+            .
+          </p>
+        </Section>
+
+        <Section title="How to complain">
+          <p>
+            If you&rsquo;re unhappy with how we&rsquo;ve handled your data, please tell us first
+            at{' '}
+            <a href={`mailto:${controllerEmail}`} className="text-brand-700 underline">
+              {controllerEmail}
+            </a>
+            . We will acknowledge your complaint promptly and aim to respond in full within 30
+            days, so we can try to put things right directly.
+          </p>
+          <p>
+            If you&rsquo;re not satisfied with our response, or you&rsquo;d rather complain
+            straight away, you have the right to complain to the UK&rsquo;s data protection
+            regulator, the Information Commissioner&rsquo;s Office (ICO), at{' '}
             <a href="https://ico.org.uk" className="text-brand-700 underline">
               ico.org.uk
             </a>
-            .
+            . Complaining to us first is optional, not a required step.
           </p>
         </Section>
       </article>
