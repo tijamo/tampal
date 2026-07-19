@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from './ui';
 
-const DISMISS_KEY = 'tamfam-install-dismissed';
+const DISMISS_KEY = 'tampal-install-dismissed';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -70,8 +70,8 @@ export function InstallPrompt() {
     >
       <p className="flex-1">
         {deferredPrompt
-          ? 'Install TamFam on this device for quick, offline-ready access.'
-          : 'Install TamFam: tap the Share icon, then "Add to Home Screen".'}
+          ? 'Install Tampal on this device for quick, offline-ready access.'
+          : 'Install Tampal: tap the Share icon, then "Add to Home Screen".'}
       </p>
       <div className="flex shrink-0 gap-2">
         {deferredPrompt && (

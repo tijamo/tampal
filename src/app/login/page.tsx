@@ -7,7 +7,7 @@ export default function LoginPage() {
   return (
     <main id="main" className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-brand-700">TamFam</h1>
+        <h1 className="text-3xl font-bold text-brand-700">Tampal</h1>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
           Tamworth Christadelphian Church
         </p>

@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <h1 className="text-3xl font-bold">Privacy notice</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           How {controllerName} (&ldquo;we&rdquo;) collects and uses your personal data in the
-          TamFam app, under the UK GDPR, the Data Protection Act 2018, and the Data (Use and
+          Tampal app, under the UK GDPR, the Data Protection Act 2018, and the Data (Use and
           Access) Act 2025.
         </p>
 

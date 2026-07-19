@@ -13,22 +13,25 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: {
-    default: 'TamFam — Tamworth Christadelphian Church',
-    template: '%s · TamFam',
+    default: 'Tampal — Tamworth Christadelphian Church',
+    template: '%s · Tampal',
   },
   description: 'Members, meetings and attendance for Tamworth Christadelphian Church.',
   manifest: '/manifest.webmanifest',
-  applicationName: 'TamFam',
+  applicationName: 'Tampal',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'TamFam',
+    title: 'Tampal',
   },
   // iOS ignores the manifest's icons for "Add to Home Screen" — it needs its
   // own apple-touch-icon link.
   icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
   },
   formatDetection: { telephone: false },
 };

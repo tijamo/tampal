@@ -18,7 +18,7 @@ export function AppNav({ isAdmin, email }: { isAdmin: boolean; email: string | n
     <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
         <Link href="/" className="text-xl font-bold text-brand-700">
-          TamFam
+          Tampal
         </Link>
         <nav aria-label="Primary" className="hidden flex-1 sm:block">
           <ul className="flex flex-wrap gap-1">

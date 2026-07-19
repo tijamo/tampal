@@ -1,5 +1,5 @@
 /*
- * TamFam service worker.
+ * Tampal service worker.
  *
  * Strategy:
  *  - Precache the app shell so the PWA opens offline.
@@ -12,7 +12,7 @@
  * (see src/lib/offline-queue.ts) and replayed on reconnect; the SW just wakes
  * the app via the 'sync' event when Background Sync is available.
  */
-const CACHE = 'tamfam-shell-v3';
+const CACHE = 'tampal-shell-v4';
 const SHELL = ['/', '/offline', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
