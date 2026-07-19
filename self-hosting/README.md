@@ -28,6 +28,9 @@ node gen-keys.mjs
 Edit `.env`: set `POSTGRES_PASSWORD`, the generated `JWT_SECRET` / `ANON_KEY` /
 `SERVICE_ROLE_KEY`, your `API_EXTERNAL_URL` and `SITE_URL`, and the `SMTP_*` values.
 
+Treat `POSTGRES_PASSWORD` as fixed once you've brought the stack up once — see
+[Troubleshooting](#troubleshooting) if you need to change it later.
+
 ## 2. Bring the stack up
 
 ```bash
@@ -118,6 +121,34 @@ Schedule a nightly logical dump and keep it encrypted and off-box:
 docker compose exec -T db pg_dump -U postgres -d postgres --no-owner \
   | gzip > "tamfam-$(date +%F).sql.gz"
 ```
+
+## Troubleshooting
+
+- **Changed `POSTGRES_PASSWORD` after the first `docker compose up -d` →
+  `auth`/`rest`/`meta` crash-loop on "password authentication failed".**
+  `db/init/00-init.sh` (which sets each service role's password from
+  `POSTGRES_PASSWORD`) only runs via Postgres's `docker-entrypoint-initdb.d`
+  mechanism, i.e. **only against a fresh, empty `db-data` volume**. Editing
+  `.env` and re-running `docker compose up -d` against an *existing* volume
+  does not update the roles' actual passwords — but `auth`, `rest`, and
+  `meta` all pick up the new value from their env vars and try to connect
+  with it, so all three start failing. Fix: either `docker compose down -v`
+  (wipes `db-data` — only safe before you've applied real data) and start
+  over from step 1, or manually `ALTER ROLE ... WITH PASSWORD '...'` each
+  service role (`authenticator`, `supabase_auth_admin`, `supabase_admin`) to
+  match. The same applies if you rotate `JWT_SECRET`: regenerate
+  `ANON_KEY`/`SERVICE_ROLE_KEY` together with it via `gen-keys.mjs` — a
+  mismatched secret makes Kong/PostgREST reject every request with 401s.
+
+- **App builds fine but every page fails once deployed.** The app's
+  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are inlined at
+  **build** time (see the `Dockerfile` note on Coolify "Build Variables"),
+  but nothing at build time checks they were actually set — `next build`
+  succeeds either way. If they're missing, `src/middleware.ts` (which runs
+  on every request) throws on its non-null-asserted
+  `process.env.NEXT_PUBLIC_SUPABASE_URL!`, taking down the whole app with no
+  build-time warning. If a fresh deploy 500s on every route, check that
+  these were actually passed as build args/variables, not just runtime env.
 
 ## Notes
 
