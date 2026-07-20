@@ -21,8 +21,6 @@ alter table people
   alter column first_name set not null,
   add constraint people_first_name_check check (length(trim(first_name)) > 0);
 
-alter table people drop column full_name;
-
 -- ----------------------------------------------------------------------------
 -- people_directory: name-only (+ opt-in contact) view, now first/surname.
 -- ----------------------------------------------------------------------------
@@ -120,3 +118,6 @@ $$;
 
 revoke all on function update_own_contact_details from public;
 grant execute on function update_own_contact_details to authenticated;
+
+-- Now safe: the views and function above no longer reference full_name.
+alter table people drop column full_name;
