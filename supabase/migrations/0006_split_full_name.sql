@@ -23,8 +23,12 @@ alter table people
 
 -- ----------------------------------------------------------------------------
 -- people_directory: name-only (+ opt-in contact) view, now first/surname.
+-- Dropped and recreated (not CREATE OR REPLACE) because Postgres won't let
+-- a replace rename an existing view column (full_name -> first_name).
 -- ----------------------------------------------------------------------------
-create or replace view people_directory as
+drop view if exists people_directory;
+
+create view people_directory as
   select
     p.id,
     p.first_name,
@@ -46,11 +50,15 @@ create or replace view people_directory as
 comment on view people_directory is
   'Member/visitor directory. Name + type for everyone; phone/email only for people with a current directory_listing consent.';
 
+grant select on people_directory to authenticated;
+
 -- ----------------------------------------------------------------------------
 -- register_eligible_people: name-only list of people whose attendance-consent
--- is currently granted.
+-- is currently granted. Same drop-and-recreate reasoning as above.
 -- ----------------------------------------------------------------------------
-create or replace view register_eligible_people as
+drop view if exists register_eligible_people;
+
+create view register_eligible_people as
   select p.id, p.first_name, p.surname
   from people p
   where p.deleted_at is null
@@ -70,6 +78,8 @@ create or replace view register_eligible_people as
 
 comment on view register_eligible_people is
   'Name-only list of people eligible to appear on an attendance register, for any authenticated user taking one.';
+
+grant select on register_eligible_people to authenticated;
 
 -- ----------------------------------------------------------------------------
 -- Self-service contact-detail editing: split name parameters.
