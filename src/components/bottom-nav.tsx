@@ -6,7 +6,7 @@ import { HomeIcon, CalendarIcon, DirectoryIcon, PeopleIcon, ProfileIcon } from '
 
 const links = [
   { href: '/', label: 'Home', icon: HomeIcon, access: 'all' },
-  { href: '/meetings', label: 'Meetings', icon: CalendarIcon, access: 'meetings' },
+  { href: '/meetings', label: 'Meetings', icon: CalendarIcon, access: 'admin' },
   { href: '/directory', label: 'Directory', icon: DirectoryIcon, access: 'all' },
   { href: '/people', label: 'People', icon: PeopleIcon, access: 'admin' },
   { href: '/profile', label: 'Profile', icon: ProfileIcon, access: 'all' },
@@ -16,17 +16,9 @@ const links = [
  * Thumb-reachable tab bar for small screens, mirroring AppNav's links.
  * Hidden at sm+ where the top nav's link list takes over instead.
  */
-export function BottomNav({
-  isAdmin,
-  canAccessMeetings,
-}: {
-  isAdmin: boolean;
-  canAccessMeetings: boolean;
-}) {
+export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
-  const items = links.filter(
-    (l) => l.access === 'all' || (l.access === 'admin' && isAdmin) || (l.access === 'meetings' && canAccessMeetings),
-  );
+  const items = links.filter((l) => l.access === 'all' || isAdmin);
 
   return (
     <nav

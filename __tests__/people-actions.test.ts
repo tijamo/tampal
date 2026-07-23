@@ -21,7 +21,7 @@ function asAdmin(userId = 'admin-1') {
     role: 'admin',
     isAdmin: true,
     isRealAdmin: true,
-    canAccessMeetings: true,
+    canTakeRegister: true,
     viewMode: 'admin',
   });
 }

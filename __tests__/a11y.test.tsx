@@ -51,11 +51,9 @@ describe('accessibility (jest-axe)', () => {
   });
 
   it('the mobile bottom nav, admin and non-admin, has no violations', async () => {
-    const { container, rerender } = render(
-      <BottomNav isAdmin={false} canAccessMeetings={false} />,
-    );
+    const { container, rerender } = render(<BottomNav isAdmin={false} />);
     expect(await axe(container)).toHaveNoViolations();
-    rerender(<BottomNav isAdmin={true} canAccessMeetings={true} />);
+    rerender(<BottomNav isAdmin={true} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

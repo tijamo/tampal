@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { requireMeetingsAccess } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { LinkButton, Card, PageHeading } from '@/components/ui';
 import { ArchiveMeeting } from '@/components/archive-meeting';
@@ -16,7 +16,7 @@ const RECURRENCE_LABEL: Record<Recurrence, string> = {
 };
 
 export default async function MeetingsPage() {
-  const { isAdmin } = await requireMeetingsAccess();
+  await requireAdmin();
   const supabase = createClient();
 
   const { data } = await supabase
@@ -30,7 +30,7 @@ export default async function MeetingsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageHeading>Meetings</PageHeading>
-        {isAdmin && <LinkButton href="/meetings/new">Add meeting</LinkButton>}
+        <LinkButton href="/meetings/new">Add meeting</LinkButton>
       </div>
 
       {meetings.length === 0 ? (
@@ -63,14 +63,10 @@ export default async function MeetingsPage() {
                         Take register
                       </LinkButton>
                     )}
-                    {isAdmin && (
-                      <>
-                        <LinkButton variant="secondary" href={`/meetings/${m.id}/edit`}>
-                          Edit
-                        </LinkButton>
-                        <ArchiveMeeting meetingId={m.id} title={m.title} />
-                      </>
-                    )}
+                    <LinkButton variant="secondary" href={`/meetings/${m.id}/edit`}>
+                      Edit
+                    </LinkButton>
+                    <ArchiveMeeting meetingId={m.id} title={m.title} />
                   </div>
                 </Card>
               </li>

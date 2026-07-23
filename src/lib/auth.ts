@@ -20,8 +20,10 @@ export interface SessionContext {
   isAdmin: boolean;
   /** The user's actual admin status, ignoring the view-mode preview. Only this should gate showing the selector itself. */
   isRealAdmin: boolean;
-  /** Effective access to Meetings/registers -- admin or register_taker, respecting the preview. */
-  canAccessMeetings: boolean;
+  /** Effective ability to take/edit attendance registers -- admin or register_taker, respecting
+   * the preview. Doesn't include browsing/managing Meetings itself, which stays admin-only;
+   * a register_taker reaches a register via Home's per-meeting links instead. */
+  canTakeRegister: boolean;
   /** The role currently in effect for this request: the real role for everyone except a
    * previewing admin, who can pick any of the three. */
   viewMode: ViewMode;
@@ -63,7 +65,7 @@ export async function requireSession(): Promise<SessionContext> {
     role,
     isAdmin: viewMode === 'admin',
     isRealAdmin,
-    canAccessMeetings: viewMode === 'admin' || viewMode === 'register_taker',
+    canTakeRegister: viewMode === 'admin' || viewMode === 'register_taker',
     viewMode,
   };
 }
@@ -75,9 +77,9 @@ export async function requireAdmin(): Promise<SessionContext> {
   return ctx;
 }
 
-/** Like requireSession but redirects users without Meetings/register access away. */
-export async function requireMeetingsAccess(): Promise<SessionContext> {
+/** Like requireSession but redirects users who can't take a register away. */
+export async function requireRegisterAccess(): Promise<SessionContext> {
   const ctx = await requireSession();
-  if (!ctx.canAccessMeetings) redirect('/');
+  if (!ctx.canTakeRegister) redirect('/');
   return ctx;
 }

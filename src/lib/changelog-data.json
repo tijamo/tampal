@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.20",
+    "message": "Make the admin preview switch a 3-way Member/Register Taker/Admin selector",
+    "date": "2026-07-23T16:24:28+00:00",
+    "hash": "53e0b16"
+  },
+  {
     "version": "0.2.19",
     "message": "Directory card grid on desktop; add ability to hide from directory entirely",
     "date": "2026-07-23T16:20:20+00:00",

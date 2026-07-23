@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { requireMeetingsAccess } from '@/lib/auth';
+import { requireRegisterAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeading } from '@/components/ui';
 import { AttendanceRegister, type RegisterPerson } from '@/components/attendance-register';
@@ -17,7 +17,7 @@ export default async function RegisterPage({
 }: {
   params: { meetingId: string; date: string };
 }) {
-  await requireMeetingsAccess();
+  const { isAdmin } = await requireRegisterAccess();
   if (!DATE_RE.test(params.date)) notFound();
   const supabase = createClient();
 
@@ -59,8 +59,8 @@ export default async function RegisterPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link href="/meetings" className="text-sm text-brand-700 underline">
-          ← Back to meetings
+        <Link href={isAdmin ? '/meetings' : '/'} className="text-sm text-brand-700 underline">
+          ← Back to {isAdmin ? 'meetings' : 'home'}
         </Link>
         <PageHeading>{m.title}</PageHeading>
         <p className="mt-1 text-slate-600 dark:text-slate-400">

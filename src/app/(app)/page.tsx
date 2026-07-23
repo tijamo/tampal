@@ -5,7 +5,7 @@ import { nextOccurrence } from '@/lib/recurrence';
 import type { Meeting } from '@/lib/supabase/types';
 
 export default async function HomePage() {
-  const { isAdmin, canAccessMeetings, email } = await requireSession();
+  const { isAdmin, canTakeRegister, email } = await requireSession();
   const supabase = createClient();
 
   const { data: meetings } = await supabase
@@ -59,7 +59,7 @@ export default async function HomePage() {
                       {meeting.location ? ` · ${meeting.location}` : ''}
                     </p>
                   </div>
-                  {canAccessMeetings && (
+                  {canTakeRegister && (
                     <LinkButton
                       variant="secondary"
                       href={`/register/${meeting.id}/${date}`}
