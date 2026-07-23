@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LoginForm } from './login-form';
+import { AppFooter } from '@/components/app-footer';
 
 export const metadata: Metadata = { title: 'Sign in' };
 
@@ -21,6 +22,7 @@ export default function LoginPage() {
           Privacy notice
         </a>
       </p>
+      <AppFooter />
     </main>
   );
 }

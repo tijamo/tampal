@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -9,7 +10,7 @@ import { InvitePerson } from '@/components/invite-person';
 import { setConsent, setUserRole } from '../actions';
 import { latestConsent } from '@/lib/consent';
 import { personName } from '@/lib/person';
-import type { Person, Consent, Profile } from '@/lib/supabase/types';
+import type { Person, Consent, Profile, Family } from '@/lib/supabase/types';
 
 export const metadata: Metadata = { title: 'Person' };
 
@@ -27,12 +28,18 @@ export default async function PersonDetailPage({ params }: { params: { id: strin
   if (!person) notFound();
   const p = person as Person;
 
-  const [{ data: consentRows }, { data: linkedProfileRow }] = await Promise.all([
-    supabase.from('consents').select('*').eq('person_id', p.id),
-    supabase.from('profiles').select('user_id, role').eq('person_id', p.id).maybeSingle(),
-  ]);
+  const [{ data: consentRows }, { data: linkedProfileRow }, { data: familyRow }] =
+    await Promise.all([
+      supabase.from('consents').select('*').eq('person_id', p.id),
+      supabase.from('profiles').select('user_id, role').eq('person_id', p.id).maybeSingle(),
+      p.family_id
+        ? supabase.from('families').select('*, people(*)').eq('id', p.family_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
   const consents = (consentRows as Consent[]) ?? [];
   const linkedProfile = linkedProfileRow as Pick<Profile, 'user_id' | 'role'> | null;
+  const family = familyRow as (Family & { people: Person[] }) | null;
+  const familyMembers = (family?.people ?? []).filter((m) => !m.deleted_at && m.id !== p.id);
 
   const contact = [
     p.email,
@@ -41,6 +48,13 @@ export default async function PersonDetailPage({ params }: { params: { id: strin
     p.address_line2,
     p.city,
     p.postcode,
+    p.notes,
+    p.birthdate,
+    p.join_date,
+    p.baptism_date,
+    p.home_church,
+    p.talents_hobbies,
+    ...p.tags,
   ].filter(Boolean);
 
   return (
@@ -75,10 +89,53 @@ export default async function PersonDetailPage({ params }: { params: { id: strin
                 />
               )}
               {p.notes && <Row label="Notes" value={p.notes} />}
+              {p.birthdate && <Row label="Date of birth" value={p.birthdate} />}
+              {p.join_date && <Row label="Join date" value={p.join_date} />}
+              {p.baptism_date && (
+                <Row
+                  label="Baptism"
+                  value={[p.baptism_date, p.baptism_location].filter(Boolean).join(' — ')}
+                />
+              )}
+              {p.home_church && <Row label="Home church" value={p.home_church} />}
+              {p.talents_hobbies && <Row label="Talents/hobbies" value={p.talents_hobbies} />}
+              {p.tags.length > 0 && <Row label="Tags" value={p.tags.join(', ')} />}
             </dl>
           )}
         </Card>
       </section>
+
+      {family && (
+        <section aria-labelledby="family-heading">
+          <h2 id="family-heading" className="mb-2 text-xl font-semibold">
+            Family
+          </h2>
+          <Card className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-medium">{family.name}</p>
+              <Link href="/families" className="text-brand-700 underline">
+                Manage families
+              </Link>
+            </div>
+            {family.primary_contact_person_id === p.id && (
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {personName(p)} is the primary contact for this family.
+              </p>
+            )}
+            {familyMembers.length > 0 && (
+              <ul className="flex flex-col gap-1">
+                {familyMembers.map((m) => (
+                  <li key={m.id}>
+                    <Link href={`/people/${m.id}`} className="text-brand-700 underline">
+                      {personName(m)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </section>
+      )}
 
       <section aria-labelledby="consent-heading">
         <h2 id="consent-heading" className="mb-2 text-xl font-semibold">

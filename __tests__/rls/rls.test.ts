@@ -108,6 +108,60 @@ d("Row-Level Security policies", () => {
     });
   });
 
+  describe("families", () => {
+    it("lets any authenticated user read families", async () => {
+      const { rows: created } = await cluster.querySuper(
+        `insert into families (name) values ('The Test Family') returning id`,
+      );
+      const { rows } = await cluster.queryAs(memberUser, `select name from families where id = $1`, [
+        created[0].id,
+      ]);
+      expect(rows).toEqual([{ name: "The Test Family" }]);
+    });
+
+    it("blocks a member from creating a family", async () => {
+      await expect(
+        cluster.queryAs(memberUser, `insert into families (name) values ('Rogue Family')`),
+      ).rejects.toThrow(PERMISSION_DENIED);
+    });
+
+    it("blocks a member from renaming a family", async () => {
+      const { rows: created } = await cluster.querySuper(
+        `insert into families (name) values ('Original Name') returning id`,
+      );
+      const { rowCount } = await cluster.queryAs(
+        memberUser,
+        `update families set name = 'Hacked Name' where id = $1`,
+        [created[0].id],
+      );
+      expect(rowCount).toBe(0);
+    });
+
+    it("lets an admin create a family, assign a member to it, and set the primary contact", async () => {
+      const { rows: created } = await cluster.queryAs(
+        adminUser,
+        `insert into families (name) values ('The Admin Family') returning id`,
+      );
+      const familyId = created[0].id;
+
+      await cluster.queryAs(adminUser, `update people set family_id = $1 where id = $2`, [
+        familyId,
+        memberPerson,
+      ]);
+      await cluster.queryAs(
+        adminUser,
+        `update families set primary_contact_person_id = $1 where id = $2`,
+        [memberPerson, familyId],
+      );
+
+      const { rows } = await cluster.querySuper(
+        `select f.primary_contact_person_id, p.family_id from families f join people p on p.id = $1 where f.id = $2`,
+        [memberPerson, familyId],
+      );
+      expect(rows[0]).toEqual({ primary_contact_person_id: memberPerson, family_id: familyId });
+    });
+  });
+
   describe("profiles", () => {
     it("blocks a member from seeing another member's profile", async () => {
       const { rows } = await cluster.queryAs(

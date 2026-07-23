@@ -27,7 +27,15 @@ export default async function PeoplePage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageHeading>People</PageHeading>
-        <LinkButton href="/people/new">Add person</LinkButton>
+        <div className="flex flex-wrap gap-3">
+          <LinkButton variant="secondary" href="/families">
+            Families
+          </LinkButton>
+          <LinkButton variant="secondary" href="/people/import">
+            Import
+          </LinkButton>
+          <LinkButton href="/people/new">Add person</LinkButton>
+        </div>
       </div>
 
       <PeopleGroup title="Members" people={members} />

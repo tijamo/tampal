@@ -18,9 +18,27 @@ export interface Person {
   city: string | null;
   postcode: string | null;
   notes: string | null;
+  family_id: string | null;
+  birthdate: string | null; // date
+  baptism_date: string | null; // date
+  baptism_location: string | null;
+  join_date: string | null; // date
+  talents_hobbies: string | null;
+  home_church: string | null;
+  tags: string[];
+  external_ref: string | null;
   created_at: string;
   created_by: string | null;
   deleted_at: string | null;
+}
+
+export interface Family {
+  id: string;
+  name: string;
+  primary_contact_person_id: string | null;
+  external_ref: string | null;
+  created_at: string;
+  created_by: string | null;
 }
 
 export interface Profile {

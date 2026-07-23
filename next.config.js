@@ -1,3 +1,5 @@
+const { version } = require('./package.json');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -5,6 +7,9 @@ const nextConfig = {
   // Emit a self-contained server bundle (.next/standalone) for the Docker image
   // used by Coolify / any container host. Ignored by adapters like Netlify.
   output: 'standalone',
+  // Inlined into the client bundle at build time (no ARG/env plumbing needed
+  // in the Dockerfile) so the footer can show the running version.
+  env: { NEXT_PUBLIC_APP_VERSION: version },
   experimental: {
     // Next 14's client Router Cache otherwise keeps a stale snapshot of a
     // visited page for up to 30s, so navigating back after adding a person or

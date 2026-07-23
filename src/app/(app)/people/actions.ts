@@ -21,6 +21,57 @@ function str(form: FormData, key: string): string | null {
   return v ? v : null;
 }
 
+function tags(form: FormData): string[] {
+  const raw = (form.get('tags') as string | null) ?? '';
+  return raw
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
+/** Shared optional-detail columns for create and update. */
+function detailFields(form: FormData) {
+  return {
+    email: str(form, 'email'),
+    phone: str(form, 'phone'),
+    address_line1: str(form, 'address_line1'),
+    address_line2: str(form, 'address_line2'),
+    city: str(form, 'city'),
+    postcode: str(form, 'postcode'),
+    notes: str(form, 'notes'),
+    birthdate: str(form, 'birthdate'),
+    baptism_date: str(form, 'baptism_date'),
+    baptism_location: str(form, 'baptism_location'),
+    join_date: str(form, 'join_date'),
+    talents_hobbies: str(form, 'talents_hobbies'),
+    home_church: str(form, 'home_church'),
+    tags: tags(form),
+  };
+}
+
+/**
+ * Resolves the family_id to save for a person: a brand-new family name (if
+ * given) takes priority over picking an existing one from the dropdown, so a
+ * typed name always wins even if a family happens to still be selected.
+ */
+async function resolveFamilyId(
+  form: FormData,
+  userId: string,
+): Promise<{ familyId: string | null; error?: string }> {
+  const newFamilyName = str(form, 'new_family_name');
+  if (newFamilyName) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('families')
+      .insert({ name: newFamilyName, created_by: userId })
+      .select('id')
+      .single();
+    if (error || !data) return { familyId: null, error: 'Could not create the new family.' };
+    return { familyId: data.id };
+  }
+  return { familyId: str(form, 'family_id') };
+}
+
 /**
  * Records a consent decision. Consent is append-only: we insert a new row each
  * time so the full grant/withdrawal history is preserved for GDPR accountability.
@@ -57,19 +108,17 @@ export async function createPerson(
   const attendanceConsent = form.get('consent_attendance') === 'on';
   const contactConsent = form.get('consent_contact') === 'on';
 
+  const { familyId, error: familyError } = await resolveFamilyId(form, userId);
+  if (familyError) return { error: familyError };
+
   const { data, error } = await supabase
     .from('people')
     .insert({
       first_name,
       surname,
       person_type,
-      email: str(form, 'email'),
-      phone: str(form, 'phone'),
-      address_line1: str(form, 'address_line1'),
-      address_line2: str(form, 'address_line2'),
-      city: str(form, 'city'),
-      postcode: str(form, 'postcode'),
-      notes: str(form, 'notes'),
+      ...detailFields(form),
+      family_id: familyId,
       created_by: userId,
     })
     .select('id')
@@ -88,7 +137,7 @@ export async function updatePerson(
   _prev: PersonFormState,
   form: FormData,
 ): Promise<PersonFormState> {
-  await requireAdmin();
+  const { userId } = await requireAdmin();
   const supabase = createClient();
   const id = form.get('id') as string;
   const first_name = str(form, 'first_name');
@@ -96,19 +145,17 @@ export async function updatePerson(
   if (!first_name) return { error: 'A first name is required.' };
   const surname = str(form, 'surname');
 
+  const { familyId, error: familyError } = await resolveFamilyId(form, userId);
+  if (familyError) return { error: familyError };
+
   const { error } = await supabase
     .from('people')
     .update({
       first_name,
       surname,
       person_type: (form.get('person_type') as PersonType) ?? 'visitor',
-      email: str(form, 'email'),
-      phone: str(form, 'phone'),
-      address_line1: str(form, 'address_line1'),
-      address_line2: str(form, 'address_line2'),
-      city: str(form, 'city'),
-      postcode: str(form, 'postcode'),
-      notes: str(form, 'notes'),
+      ...detailFields(form),
+      family_id: familyId,
     })
     .eq('id', id);
 
