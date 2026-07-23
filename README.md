@@ -64,6 +64,8 @@ in order:
 - `supabase/migrations/0004_self_service.sql` — invite/person linking
 - `supabase/migrations/0005_self_service_rls.sql` — self-service RLS/RPCs
 - `supabase/migrations/0006_split_full_name.sql` — split `full_name` into `first_name`/`surname`
+- `supabase/migrations/0007_lock_down_maintenance_rpcs.sql` — revoke public execute on the retention RPCs
+- `supabase/migrations/0008_families_and_import_fields.sql` — `families` table, family membership, and extra person fields for the CHMeetings import
 
 Either run them via the Supabase SQL editor, or with the CLI:
 
