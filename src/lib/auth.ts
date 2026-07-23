@@ -3,21 +3,27 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile, Role } from '@/lib/supabase/types';
 
-export type ViewMode = 'admin' | 'member';
+/** The role an admin is currently previewing the app as -- always equal to
+ * their real role unless they're a real admin who's chosen to preview a
+ * lower one. */
+export type ViewMode = Role;
 const VIEW_MODE_COOKIE = 'view_as';
+const VIEW_MODES: readonly Role[] = ['admin', 'register_taker', 'member'];
 
 export interface SessionContext {
   userId: string;
   email: string | null;
   profile: Profile | null;
-  /** The user's actual role, ignoring the view-mode toggle. */
+  /** The user's actual role, ignoring the view-mode preview. */
   role: Role;
-  /** Effective admin status for this request -- false while an admin is previewing the member view. */
+  /** Effective admin status for this request -- false while an admin is previewing a lower role. */
   isAdmin: boolean;
-  /** The user's actual admin status, ignoring the view-mode toggle. Only this should gate showing the toggle itself. */
+  /** The user's actual admin status, ignoring the view-mode preview. Only this should gate showing the selector itself. */
   isRealAdmin: boolean;
-  /** Effective access to Meetings/registers -- admin or register_taker, false while previewing member view. */
+  /** Effective access to Meetings/registers -- admin or register_taker, respecting the preview. */
   canAccessMeetings: boolean;
+  /** The role currently in effect for this request: the real role for everyone except a
+   * previewing admin, who can pick any of the three. */
   viewMode: ViewMode;
 }
 
@@ -41,20 +47,23 @@ export async function requireSession(): Promise<SessionContext> {
 
   const role: Role = (profile?.role as Role | undefined) ?? 'member';
   const isRealAdmin = role === 'admin';
-  // Only a real admin's own choice can select member view; anyone else's
-  // cookie value is irrelevant since isAdmin/canAccessMeetings below are
-  // gated on the real role first, so it can only ever hide privilege.
+  // Only a real admin can pick a preview role; anyone else's cookie value is
+  // irrelevant since viewMode falls back to their own real role, so this can
+  // only ever hide privilege, never grant it.
+  const cookieValue = cookies().get(VIEW_MODE_COOKIE)?.value;
   const viewMode: ViewMode =
-    isRealAdmin && cookies().get(VIEW_MODE_COOKIE)?.value === 'member' ? 'member' : 'admin';
+    isRealAdmin && cookieValue && VIEW_MODES.includes(cookieValue as Role)
+      ? (cookieValue as Role)
+      : role;
 
   return {
     userId: user.id,
     email: user.email ?? null,
     profile: (profile as Profile) ?? null,
     role,
-    isAdmin: isRealAdmin && viewMode === 'admin',
+    isAdmin: viewMode === 'admin',
     isRealAdmin,
-    canAccessMeetings: (role === 'admin' || role === 'register_taker') && viewMode === 'admin',
+    canAccessMeetings: viewMode === 'admin' || viewMode === 'register_taker',
     viewMode,
   };
 }

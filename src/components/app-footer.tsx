@@ -1,18 +1,24 @@
 'use client';
 
+import { useTransition } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import changelog from '@/lib/changelog-data.json';
-import { ToggleSwitch } from '@/components/toggle-switch';
 import { setViewMode } from '@/app/(app)/view-mode-actions';
 import type { ViewMode } from '@/lib/auth';
 
 const version = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';
 
+const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
+  { value: 'member', label: 'Member' },
+  { value: 'register_taker', label: 'Register Taker' },
+  { value: 'admin', label: 'Admin' },
+];
+
 /**
  * App version in the footer; tapping it opens the changelog (generated from
- * commit history). Admins additionally get a switch to preview the app as a
- * normal member would see it -- isRealAdmin (not the effective isAdmin) gates
- * showing the switch, so it stays visible while previewing member view.
+ * commit history). Admins additionally get a 3-way pill selector to preview
+ * the app as any role would see it -- isRealAdmin (not the effective isAdmin)
+ * gates showing the selector, so it stays visible while previewing a lower role.
  */
 export function AppFooter({
   isRealAdmin = false,
@@ -21,18 +27,41 @@ export function AppFooter({
   isRealAdmin?: boolean;
   viewMode?: ViewMode;
 }) {
+  const [pending, startTransition] = useTransition();
+
   return (
     <footer className="mx-auto mt-8 flex max-w-4xl flex-col items-center gap-2 px-4 pb-6 text-center">
       {isRealAdmin && (
-        <div className="w-full max-w-xs">
-          <ToggleSwitch
-            id="view-mode"
-            label="Admin view"
-            granted={viewMode === 'admin'}
-            onToggle={(checked) => setViewMode(checked ? 'admin' : 'member')}
-            onLabel="Admin"
-            offLabel="Member"
-          />
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Viewing as
+          </span>
+          <div
+            role="group"
+            aria-label="Preview as role"
+            className="inline-flex rounded-full border border-slate-300 p-1 dark:border-slate-700"
+          >
+            {VIEW_MODE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={viewMode === opt.value}
+                disabled={pending}
+                onClick={() =>
+                  startTransition(() => {
+                    void setViewMode(opt.value);
+                  })
+                }
+                className={`min-h-touch rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                  viewMode === opt.value
+                    ? 'bg-brand-700 text-white'
+                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <Dialog.Root>

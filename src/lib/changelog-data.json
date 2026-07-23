@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.19",
+    "message": "Directory card grid on desktop; add ability to hide from directory entirely",
+    "date": "2026-07-23T16:20:20+00:00",
+    "hash": "697867c"
+  },
+  {
     "version": "0.2.18",
     "message": "Split directory consent into phone/email/address, add address to directory",
     "date": "2026-07-23T16:03:26+00:00",
