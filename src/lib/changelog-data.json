@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.13",
+    "message": "Show one occurrence per meeting series on Home; add admin view-mode switch",
+    "date": "2026-07-23T14:22:25+00:00",
+    "hash": "b7f8376"
+  },
+  {
     "version": "0.2.12",
     "message": "Disambiguate the families<->people PostgREST embed",
     "date": "2026-07-23T13:41:52+00:00",
