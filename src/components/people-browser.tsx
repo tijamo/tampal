@@ -101,9 +101,17 @@ export function PeopleBrowser<T extends BrowsablePerson>({
   const [view, setView] = useState<View>('alphabetical');
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
 
+  // Visitors never appear in the directory, regardless of what the caller
+  // passes in -- enforced here too, not just by the people_directory view
+  // that /directory actually queries from.
+  const visiblePeople = useMemo(
+    () => (variant === 'directory' ? people.filter((p) => p.person_type === 'member') : people),
+    [people, variant],
+  );
+
   const searched = useMemo(
-    () => people.filter((p) => matchesSearch(p, query)),
-    [people, query],
+    () => visiblePeople.filter((p) => matchesSearch(p, query)),
+    [visiblePeople, query],
   );
 
   const availableLetters = useMemo(
@@ -206,8 +214,14 @@ export function PeopleBrowser<T extends BrowsablePerson>({
         })}
       </div>
 
-      <PersonGroup title="Members" people={members} variant={variant} />
-      <PersonGroup title="Visitors" people={visitors} variant={variant} />
+      {variant === 'directory' ? (
+        <PersonGroup title="Members" people={members} variant={variant} />
+      ) : (
+        <>
+          <PersonGroup title="Members" people={members} variant={variant} />
+          <PersonGroup title="Visitors" people={visitors} variant={variant} />
+        </>
+      )}
     </div>
   );
 }

@@ -158,18 +158,22 @@ export default async function PersonDetailPage({ params }: { params: { id: strin
             granted={latestConsent(consents, 'attendance_records')}
             onToggle={setConsent.bind(null, p.id, 'attendance_records')}
           />
-          <ToggleSwitch
-            id="contact_storage"
-            label="Store contact and address details"
-            granted={latestConsent(consents, 'contact_storage')}
-            onToggle={setConsent.bind(null, p.id, 'contact_storage')}
-          />
-          <ToggleSwitch
-            id="directory_visible"
-            label="Show in the member directory"
-            granted={latestConsent(consents, 'directory_visible', true)}
-            onToggle={setConsent.bind(null, p.id, 'directory_visible')}
-          />
+          {p.person_type === 'member' && (
+            <>
+              <ToggleSwitch
+                id="contact_storage"
+                label="Store contact and address details"
+                granted={latestConsent(consents, 'contact_storage')}
+                onToggle={setConsent.bind(null, p.id, 'contact_storage')}
+              />
+              <ToggleSwitch
+                id="directory_visible"
+                label="Show in the member directory"
+                granted={latestConsent(consents, 'directory_visible', true)}
+                onToggle={setConsent.bind(null, p.id, 'directory_visible')}
+              />
+            </>
+          )}
         </Card>
       </section>
 

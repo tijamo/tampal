@@ -76,6 +76,7 @@ in order:
 - `supabase/migrations/0016_directory_hidden_rls.sql` — excludes anyone with `directory_hidden` granted from `people_directory` entirely (retired by 0017/0018)
 - `supabase/migrations/0017_directory_visible_consent_type.sql` — adds `directory_visible` (enum value only), replacing `directory_hidden`'s inverted polarity
 - `supabase/migrations/0018_directory_visible_rls.sql` — `people_directory` now keys visibility off `directory_visible` (default true), consistent with phone/email/address's granted-means-shown polarity
+- `supabase/migrations/0019_directory_members_only.sql` — visitors are excluded from `people_directory` entirely, regardless of consent
 
 Either run them via the Supabase SQL editor, or with the CLI:
 

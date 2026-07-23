@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.24",
+    "message": "Add Light/Dark/Auto theme toggle, defaulting to Auto",
+    "date": "2026-07-23T21:35:49+00:00",
+    "hash": "2e78ca6"
+  },
+  {
     "version": "0.2.23",
     "message": "Flip directory visibility toggle to match the other consents' polarity",
     "date": "2026-07-23T19:29:01+00:00",

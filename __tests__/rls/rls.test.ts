@@ -570,44 +570,66 @@ d("Row-Level Security policies", () => {
   });
 
   describe("people_directory / register_eligible_people views", () => {
-    const visitorId = randomUUID();
+    const contactTestPersonId = randomUUID();
 
     beforeAll(async () => {
       await cluster.querySuper(
         `insert into people (id, first_name, person_type, phone, email, address_line1, city, postcode)
-           values ($1, 'Vinny', 'visitor', '0999', 'vinny@example.com', '1 Vine St', 'Tamworth', 'B79 1AA')`,
+           values ($1, 'Vinny', 'member', '0999', 'vinny@example.com', '1 Vine St', 'Tamworth', 'B79 1AA')`,
+        [contactTestPersonId],
+      );
+    });
+
+    it("never lists visitors, even with every directory consent granted", async () => {
+      const visitorId = randomUUID();
+      await cluster.querySuper(
+        `insert into people (id, first_name, person_type) values ($1, 'Vera', 'visitor')`,
         [visitorId],
       );
+      await cluster.querySuper(
+        `insert into consents (person_id, consent_type, granted, granted_at) values
+           ($1, 'directory_visible', true, now()),
+           ($1, 'directory_phone', true, now()),
+           ($1, 'directory_email', true, now()),
+           ($1, 'directory_address', true, now())`,
+        [visitorId],
+      );
+      const { rows } = await cluster.queryAs(
+        memberUser,
+        `select id from people_directory where id = $1`,
+        [visitorId],
+      );
+      expect(rows).toEqual([]);
     });
 
     it("hides phone/email/address in the directory until each consent is independently granted", async () => {
       const before = await cluster.queryAs(
         memberUser,
         `select phone, email, address_line1 from people_directory where id = $1`,
-        [visitorId],
+        [contactTestPersonId],
       );
       expect(before.rows[0]).toEqual({ phone: null, email: null, address_line1: null });
 
       await cluster.querySuper(
         `insert into consents (person_id, consent_type, granted, granted_at) values ($1, 'directory_phone', true, now())`,
-        [visitorId],
+        [contactTestPersonId],
       );
       const phoneOnly = await cluster.queryAs(
         memberUser,
         `select phone, email, address_line1 from people_directory where id = $1`,
-        [visitorId],
+        [contactTestPersonId],
       );
       expect(phoneOnly.rows[0]).toEqual({ phone: "0999", email: null, address_line1: null });
 
       await cluster.querySuper(
         `insert into consents (person_id, consent_type, granted, granted_at) values
            ($1, 'directory_email', true, now()), ($1, 'directory_address', true, now())`,
-        [visitorId],
+        [contactTestPersonId],
       );
       const all = await cluster.queryAs(
         memberUser,
         `select phone, email, address_line1 from people_directory where id = $1`,
-        [visitorId],
+        [contactTestPersonId],
       );
       expect(all.rows[0]).toEqual({
         phone: "0999",
@@ -619,12 +641,12 @@ d("Row-Level Security policies", () => {
     it("hides a field again once its consent is withdrawn, independently of the others (latest consent wins)", async () => {
       await cluster.querySuper(
         `insert into consents (person_id, consent_type, granted, withdrawn_at) values ($1, 'directory_phone', false, now())`,
-        [visitorId],
+        [contactTestPersonId],
       );
       const { rows } = await cluster.queryAs(
         memberUser,
         `select phone, email, address_line1 from people_directory where id = $1`,
-        [visitorId],
+        [contactTestPersonId],
       );
       expect(rows[0]).toEqual({
         phone: null,
@@ -634,11 +656,13 @@ d("Row-Level Security policies", () => {
     });
 
     it("excludes soft-deleted people from the directory", async () => {
-      await cluster.querySuper(`update people set deleted_at = now() where id = $1`, [visitorId]);
+      await cluster.querySuper(`update people set deleted_at = now() where id = $1`, [
+        contactTestPersonId,
+      ]);
       const { rows } = await cluster.queryAs(
         memberUser,
         `select id from people_directory where id = $1`,
-        [visitorId],
+        [contactTestPersonId],
       );
       expect(rows).toEqual([]);
     });

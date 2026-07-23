@@ -50,43 +50,45 @@ export default async function ProfilePage() {
       <PageHeading>My profile</PageHeading>
       <ProfileForm person={person as Person} />
 
-      <section aria-labelledby="directory-heading">
-        <h2 id="directory-heading" className="mb-2 text-xl font-semibold">
-          Directory listing
-        </h2>
-        <Card className="mb-3">
-          <ToggleSwitch
-            id="directory-visible"
-            label="Show me in the member directory"
-            granted={latestConsent(consents, 'directory_visible', true)}
-            onToggle={setOwnDirectoryConsent.bind(null, 'directory_visible')}
-          />
-        </Card>
-        <p className="mb-2 text-sm text-slate-600 dark:text-slate-400">
-          If you&rsquo;re listed, each of these is independent &mdash; sharing one doesn&rsquo;t
-          share the others.
-        </p>
-        <Card className="flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
-          <ToggleSwitch
-            id="directory-phone"
-            label="Show my phone number in the member directory"
-            granted={latestConsent(consents, 'directory_phone')}
-            onToggle={setOwnDirectoryConsent.bind(null, 'directory_phone')}
-          />
-          <ToggleSwitch
-            id="directory-email"
-            label="Show my email address in the member directory"
-            granted={latestConsent(consents, 'directory_email')}
-            onToggle={setOwnDirectoryConsent.bind(null, 'directory_email')}
-          />
-          <ToggleSwitch
-            id="directory-address"
-            label="Show my postal address in the member directory"
-            granted={latestConsent(consents, 'directory_address')}
-            onToggle={setOwnDirectoryConsent.bind(null, 'directory_address')}
-          />
-        </Card>
-      </section>
+      {(person as Person).person_type === 'member' && (
+        <section aria-labelledby="directory-heading">
+          <h2 id="directory-heading" className="mb-2 text-xl font-semibold">
+            Directory listing
+          </h2>
+          <Card className="mb-3">
+            <ToggleSwitch
+              id="directory-visible"
+              label="Show me in the member directory"
+              granted={latestConsent(consents, 'directory_visible', true)}
+              onToggle={setOwnDirectoryConsent.bind(null, 'directory_visible')}
+            />
+          </Card>
+          <p className="mb-2 text-sm text-slate-600 dark:text-slate-400">
+            If you&rsquo;re listed, each of these is independent &mdash; sharing one doesn&rsquo;t
+            share the others.
+          </p>
+          <Card className="flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
+            <ToggleSwitch
+              id="directory-phone"
+              label="Show my phone number in the member directory"
+              granted={latestConsent(consents, 'directory_phone')}
+              onToggle={setOwnDirectoryConsent.bind(null, 'directory_phone')}
+            />
+            <ToggleSwitch
+              id="directory-email"
+              label="Show my email address in the member directory"
+              granted={latestConsent(consents, 'directory_email')}
+              onToggle={setOwnDirectoryConsent.bind(null, 'directory_email')}
+            />
+            <ToggleSwitch
+              id="directory-address"
+              label="Show my postal address in the member directory"
+              granted={latestConsent(consents, 'directory_address')}
+              onToggle={setOwnDirectoryConsent.bind(null, 'directory_address')}
+            />
+          </Card>
+        </section>
+      )}
 
       <section aria-labelledby="rights-heading">
         <h2 id="rights-heading" className="mb-2 text-xl font-semibold">
