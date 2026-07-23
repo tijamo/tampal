@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { Card, PageHeading, Button } from '@/components/ui';
+import { Card, PageHeading, Button, Banner } from '@/components/ui';
 import { FamilyCard } from '@/components/family-card';
 import { createFamily } from './actions';
 import type { Family, Person } from '@/lib/supabase/types';
@@ -14,7 +14,7 @@ export default async function FamiliesPage() {
   await requireAdmin();
   const supabase = createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('families')
     .select('*, people(*)')
     .order('name');
@@ -47,7 +47,9 @@ export default async function FamiliesPage() {
         </form>
       </Card>
 
-      {families.length === 0 ? (
+      {error && <Banner tone="error">Could not load families: {error.message}</Banner>}
+
+      {!error && families.length === 0 ? (
         <p className="text-slate-600 dark:text-slate-400">No families yet.</p>
       ) : (
         <div className="flex flex-col gap-4">
