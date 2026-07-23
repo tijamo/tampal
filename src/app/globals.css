@@ -2,8 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tells the browser which native-control colours (form controls, scrollbars)
+   to use. Keyed off the .dark class -- same source of truth as every other
+   dark-mode style here -- not the OS preference directly, so a user who
+   picks Light/Dark overrides native controls too, not just our own CSS. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
 }
 
 /* Visible focus for keyboard users on every interactive element (WCAG 2.4.7).
@@ -21,14 +28,14 @@
     @apply bg-white text-slate-900 antialiased font-sans;
   }
 
-  @media (prefers-color-scheme: dark) {
-    body {
-      @apply bg-slate-950 text-slate-100;
-    }
+  /* .dark is applied to <html> by the theme toggle/init script, not driven
+     by prefers-color-scheme directly -- see theme-toggle.tsx. */
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
 
-    :focus-visible {
-      outline-color: theme('colors.brand.400');
-    }
+  .dark :focus-visible {
+    outline-color: theme('colors.brand.400');
   }
 }
 

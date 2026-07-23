@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.25",
+    "message": "Exclude visitors from the directory; simplify their form to name + home church",
+    "date": "2026-07-23T21:37:04+00:00",
+    "hash": "f0c07cb"
+  },
+  {
     "version": "0.2.24",
     "message": "Add Light/Dark/Auto theme toggle, defaulting to Auto",
     "date": "2026-07-23T21:35:49+00:00",
