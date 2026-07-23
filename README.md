@@ -70,6 +70,8 @@ in order:
 - `supabase/migrations/0010_register_taker_role.sql` — adds the `register_taker` role (enum value only)
 - `supabase/migrations/0011_register_taker_rls.sql` — narrows attendance access to admin/register_taker, restores self-read
 - `supabase/migrations/0012_self_service_erasure.sql` — shared erase_person_data() RPC for admin and self-service GDPR erasure
+- `supabase/migrations/0013_directory_consent_types.sql` — adds `directory_phone`/`directory_email`/`directory_address` consent types (enum values only)
+- `supabase/migrations/0014_granular_directory_consent.sql` — splits directory sharing into independent phone/email/address consent, exposes address on `people_directory`
 
 Either run them via the Supabase SQL editor, or with the CLI:
 

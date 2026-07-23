@@ -54,12 +54,27 @@ export default async function ProfilePage() {
         <h2 id="directory-heading" className="mb-2 text-xl font-semibold">
           Directory listing
         </h2>
-        <Card>
+        <p className="mb-2 text-sm text-slate-600 dark:text-slate-400">
+          Each of these is independent &mdash; sharing one doesn&rsquo;t share the others.
+        </p>
+        <Card className="flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
           <ToggleSwitch
-            id="directory-listing"
-            label="Show my phone and email in the member directory"
-            granted={latestConsent(consents, 'directory_listing')}
-            onToggle={setOwnDirectoryConsent}
+            id="directory-phone"
+            label="Show my phone number in the member directory"
+            granted={latestConsent(consents, 'directory_phone')}
+            onToggle={setOwnDirectoryConsent.bind(null, 'directory_phone')}
+          />
+          <ToggleSwitch
+            id="directory-email"
+            label="Show my email address in the member directory"
+            granted={latestConsent(consents, 'directory_email')}
+            onToggle={setOwnDirectoryConsent.bind(null, 'directory_email')}
+          />
+          <ToggleSwitch
+            id="directory-address"
+            label="Show my postal address in the member directory"
+            granted={latestConsent(consents, 'directory_address')}
+            onToggle={setOwnDirectoryConsent.bind(null, 'directory_address')}
           />
         </Card>
       </section>

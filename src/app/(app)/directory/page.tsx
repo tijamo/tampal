@@ -16,6 +16,10 @@ interface DirectoryEntry {
   phone: string | null;
   email: string | null;
   family_id: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  postcode: string | null;
 }
 
 export default async function DirectoryPage() {
@@ -33,8 +37,8 @@ export default async function DirectoryPage() {
     <div className="flex flex-col gap-6">
       <PageHeading>Directory</PageHeading>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Phone and email are shown only for people who&rsquo;ve chosen to share them. Manage your
-        own listing from{' '}
+        Phone, email and address are each shown only for people who&rsquo;ve separately chosen to
+        share them. Manage your own listing from{' '}
         <Link href="/profile" className="underline">
           My profile
         </Link>

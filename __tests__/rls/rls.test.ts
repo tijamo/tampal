@@ -406,13 +406,40 @@ d("Row-Level Security policies", () => {
   });
 
   describe("set_own_directory_consent RPC", () => {
-    it("records an append-only consent tied to the caller's own person, not an arbitrary one", async () => {
-      await cluster.queryAs(memberUser, `select set_own_directory_consent($1)`, [true]);
+    it("records an append-only consent, of the given type, tied to the caller's own person", async () => {
+      await cluster.queryAs(memberUser, `select set_own_directory_consent($1, $2)`, [
+        "directory_phone",
+        true,
+      ]);
       const { rows } = await cluster.querySuper(
-        `select person_id, granted from consents where person_id = $1 and consent_type = 'directory_listing' order by created_at desc limit 1`,
+        `select person_id, granted from consents where person_id = $1 and consent_type = 'directory_phone' order by created_at desc limit 1`,
         [memberPerson],
       );
       expect(rows[0]).toEqual({ person_id: memberPerson, granted: true });
+    });
+
+    it("independently tracks phone, email and address consent", async () => {
+      await cluster.queryAs(memberUser, `select set_own_directory_consent($1, $2)`, [
+        "directory_email",
+        true,
+      ]);
+      const { rows } = await cluster.querySuper(
+        `select consent_type, granted from consents where person_id = $1 and consent_type in ('directory_phone', 'directory_email', 'directory_address')`,
+        [memberPerson],
+      );
+      const byType = Object.fromEntries(rows.map((r) => [r.consent_type, r.granted]));
+      expect(byType.directory_phone).toBe(true);
+      expect(byType.directory_email).toBe(true);
+      expect(byType.directory_address).toBeUndefined();
+    });
+
+    it("rejects a consent_type outside the directory allowlist (can't be used to set unrelated consents)", async () => {
+      await expect(
+        cluster.queryAs(memberUser, `select set_own_directory_consent($1, $2)`, [
+          "attendance_records",
+          true,
+        ]),
+      ).rejects.toThrow(/invalid consent type/i);
     });
   });
 
@@ -490,42 +517,63 @@ d("Row-Level Security policies", () => {
 
     beforeAll(async () => {
       await cluster.querySuper(
-        `insert into people (id, first_name, person_type, phone, email) values ($1, 'Vinny', 'visitor', '0999', 'vinny@example.com')`,
+        `insert into people (id, first_name, person_type, phone, email, address_line1, city, postcode)
+           values ($1, 'Vinny', 'visitor', '0999', 'vinny@example.com', '1 Vine St', 'Tamworth', 'B79 1AA')`,
         [visitorId],
       );
     });
 
-    it("hides phone/email in the directory until directory_listing consent is granted", async () => {
+    it("hides phone/email/address in the directory until each consent is independently granted", async () => {
       const before = await cluster.queryAs(
         memberUser,
-        `select phone, email from people_directory where id = $1`,
+        `select phone, email, address_line1 from people_directory where id = $1`,
         [visitorId],
       );
-      expect(before.rows[0]).toEqual({ phone: null, email: null });
+      expect(before.rows[0]).toEqual({ phone: null, email: null, address_line1: null });
 
       await cluster.querySuper(
-        `insert into consents (person_id, consent_type, granted, granted_at) values ($1, 'directory_listing', true, now())`,
+        `insert into consents (person_id, consent_type, granted, granted_at) values ($1, 'directory_phone', true, now())`,
         [visitorId],
       );
-      const after = await cluster.queryAs(
+      const phoneOnly = await cluster.queryAs(
         memberUser,
-        `select phone, email from people_directory where id = $1`,
+        `select phone, email, address_line1 from people_directory where id = $1`,
         [visitorId],
       );
-      expect(after.rows[0]).toEqual({ phone: "0999", email: "vinny@example.com" });
+      expect(phoneOnly.rows[0]).toEqual({ phone: "0999", email: null, address_line1: null });
+
+      await cluster.querySuper(
+        `insert into consents (person_id, consent_type, granted, granted_at) values
+           ($1, 'directory_email', true, now()), ($1, 'directory_address', true, now())`,
+        [visitorId],
+      );
+      const all = await cluster.queryAs(
+        memberUser,
+        `select phone, email, address_line1 from people_directory where id = $1`,
+        [visitorId],
+      );
+      expect(all.rows[0]).toEqual({
+        phone: "0999",
+        email: "vinny@example.com",
+        address_line1: "1 Vine St",
+      });
     });
 
-    it("hides contact details again once consent is withdrawn (latest consent wins)", async () => {
+    it("hides a field again once its consent is withdrawn, independently of the others (latest consent wins)", async () => {
       await cluster.querySuper(
-        `insert into consents (person_id, consent_type, granted, withdrawn_at) values ($1, 'directory_listing', false, now())`,
+        `insert into consents (person_id, consent_type, granted, withdrawn_at) values ($1, 'directory_phone', false, now())`,
         [visitorId],
       );
       const { rows } = await cluster.queryAs(
         memberUser,
-        `select phone, email from people_directory where id = $1`,
+        `select phone, email, address_line1 from people_directory where id = $1`,
         [visitorId],
       );
-      expect(rows[0]).toEqual({ phone: null, email: null });
+      expect(rows[0]).toEqual({
+        phone: null,
+        email: "vinny@example.com",
+        address_line1: "1 Vine St",
+      });
     });
 
     it("excludes soft-deleted people from the directory", async () => {

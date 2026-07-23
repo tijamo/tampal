@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.17",
+    "message": "Add self-service GDPR export/erasure to Profile",
+    "date": "2026-07-23T15:55:51+00:00",
+    "hash": "22c054f"
+  },
+  {
     "version": "0.2.16",
     "message": "Fix People/Directory crash; add register_taker role",
     "date": "2026-07-23T15:08:50+00:00",

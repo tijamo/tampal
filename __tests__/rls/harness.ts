@@ -120,6 +120,8 @@ export async function startRlsCluster(): Promise<RlsCluster> {
       "0010_register_taker_role.sql",
       "0011_register_taker_rls.sql",
       "0012_self_service_erasure.sql",
+      "0013_directory_consent_types.sql",
+      "0014_granular_directory_consent.sql",
     ]) {
       await admin.query(loadMigrationSql(file));
     }

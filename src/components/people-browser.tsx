@@ -14,6 +14,10 @@ export interface BrowsablePerson {
   family_id: string | null;
   phone?: string | null;
   email?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  postcode?: string | null;
 }
 
 /**
@@ -38,6 +42,7 @@ function renderItem(p: BrowsablePerson, variant: Variant): ReactNode {
       </Card>
     );
   }
+  const address = [p.address_line1, p.address_line2, p.city, p.postcode].filter(Boolean).join(', ');
   return (
     <Card className="flex flex-col gap-1 py-3">
       <span className="font-medium">{personName(p)}</span>
@@ -46,6 +51,7 @@ function renderItem(p: BrowsablePerson, variant: Variant): ReactNode {
           {[p.phone, p.email].filter(Boolean).join(' · ')}
         </span>
       )}
+      {address && <span className="text-sm text-slate-600 dark:text-slate-400">{address}</span>}
     </Card>
   );
 }

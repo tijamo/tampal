@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import type { DirectoryConsentType } from '@/lib/supabase/types';
 
 export interface ProfileFormState {
   error?: string;
@@ -49,14 +50,17 @@ export async function updateOwnProfile(
   return { success: 'Your details have been updated.' };
 }
 
-/** Self-service opt-in/out of appearing with contact details in the shared
- * directory (see the `directory_listing` consent type). */
-export async function setOwnDirectoryConsent(granted: boolean) {
+/**
+ * Self-service opt-in/out of sharing one specific field (phone, email, or
+ * address) in the member directory. Each is independent -- sharing your
+ * phone doesn't imply sharing your address.
+ */
+export async function setOwnDirectoryConsent(type: DirectoryConsentType, granted: boolean) {
   const { profile } = await requireSession();
   if (!profile?.person_id) return;
 
   const supabase = createClient();
-  await supabase.rpc('set_own_directory_consent', { p_granted: granted });
+  await supabase.rpc('set_own_directory_consent', { p_consent_type: type, p_granted: granted });
 
   revalidatePath('/profile');
   revalidatePath('/directory');
