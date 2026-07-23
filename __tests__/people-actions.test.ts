@@ -19,6 +19,8 @@ function asAdmin(userId = 'admin-1') {
     email: 'admin@example.org',
     profile: null,
     isAdmin: true,
+    isRealAdmin: true,
+    viewMode: 'admin',
   });
 }
 

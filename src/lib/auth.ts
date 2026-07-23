@@ -1,12 +1,20 @@
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/lib/supabase/types';
+
+export type ViewMode = 'admin' | 'member';
+const VIEW_MODE_COOKIE = 'view_as';
 
 export interface SessionContext {
   userId: string;
   email: string | null;
   profile: Profile | null;
+  /** Effective admin status for this request -- false while an admin is previewing the member view. */
   isAdmin: boolean;
+  /** The user's actual role, ignoring the view-mode toggle. Only this should gate showing the toggle itself. */
+  isRealAdmin: boolean;
+  viewMode: ViewMode;
 }
 
 /**
@@ -27,11 +35,19 @@ export async function requireSession(): Promise<SessionContext> {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  const isRealAdmin = profile?.role === 'admin';
+  // Only a real admin's own choice can select member view; anyone else's
+  // cookie value is irrelevant since isAdmin below is gated on isRealAdmin.
+  const viewMode: ViewMode =
+    isRealAdmin && cookies().get(VIEW_MODE_COOKIE)?.value === 'member' ? 'member' : 'admin';
+
   return {
     userId: user.id,
     email: user.email ?? null,
     profile: (profile as Profile) ?? null,
-    isAdmin: profile?.role === 'admin',
+    isAdmin: isRealAdmin && viewMode === 'admin',
+    isRealAdmin,
+    viewMode,
   };
 }
 

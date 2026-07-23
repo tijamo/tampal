@@ -8,7 +8,7 @@ import { AppFooter } from '@/components/app-footer';
  * there is no valid session (defence in depth alongside the middleware).
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAdmin, email } = await requireSession();
+  const { isAdmin, isRealAdmin, viewMode, email } = await requireSession();
 
   return (
     <>
@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         className="mx-auto max-w-4xl px-4 py-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-6"
       >
         {children}
-        <AppFooter />
+        <AppFooter isRealAdmin={isRealAdmin} viewMode={viewMode} />
       </main>
       <BottomNav isAdmin={isAdmin} />
     </>

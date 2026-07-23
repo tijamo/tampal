@@ -1,32 +1,28 @@
 import { requireSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { LinkButton, Card, PageHeading } from '@/components/ui';
-import { occurrencesInRange, toDateString } from '@/lib/recurrence';
+import { nextOccurrence } from '@/lib/recurrence';
 import type { Meeting } from '@/lib/supabase/types';
 
 export default async function HomePage() {
   const { isAdmin, email } = await requireSession();
   const supabase = createClient();
 
-  // Upcoming occurrences across all active meetings for the next 14 days.
   const { data: meetings } = await supabase
     .from('meetings')
     .select('*')
     .eq('archived', false);
 
+  // One row per series: its next occurrence (today counts as "current"), not
+  // every occurrence in a date window -- a weekly meeting should only ever
+  // take up one slot on the home page.
   const today = new Date();
-  const horizon = new Date();
-  horizon.setDate(horizon.getDate() + 14);
-
   const upcoming = ((meetings as Meeting[]) ?? [])
-    .flatMap((m) =>
-      occurrencesInRange(m, toDateString(today), toDateString(horizon)).map((o) => ({
-        meeting: m,
-        date: o.date,
-      })),
-    )
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 8);
+    .flatMap((meeting) => {
+      const occ = nextOccurrence(meeting, today);
+      return occ ? [{ meeting, date: occ.date }] : [];
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,9 +40,7 @@ export default async function HomePage() {
         </h2>
         {upcoming.length === 0 ? (
           <Card>
-            <p className="text-slate-600 dark:text-slate-400">
-              No meetings scheduled in the next 14 days.
-            </p>
+            <p className="text-slate-600 dark:text-slate-400">No upcoming meetings.</p>
             {isAdmin && (
               <div className="mt-4">
                 <LinkButton href="/meetings/new">Add a meeting</LinkButton>

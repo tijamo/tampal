@@ -2,13 +2,39 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import changelog from '@/lib/changelog-data.json';
+import { ToggleSwitch } from '@/components/toggle-switch';
+import { setViewMode } from '@/app/(app)/view-mode-actions';
+import type { ViewMode } from '@/lib/auth';
 
 const version = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';
 
-/** App version in the footer; tapping it opens the changelog (generated from commit history). */
-export function AppFooter() {
+/**
+ * App version in the footer; tapping it opens the changelog (generated from
+ * commit history). Admins additionally get a switch to preview the app as a
+ * normal member would see it -- isRealAdmin (not the effective isAdmin) gates
+ * showing the switch, so it stays visible while previewing member view.
+ */
+export function AppFooter({
+  isRealAdmin = false,
+  viewMode = 'admin',
+}: {
+  isRealAdmin?: boolean;
+  viewMode?: ViewMode;
+}) {
   return (
-    <footer className="mx-auto mt-8 max-w-4xl px-4 pb-6 text-center">
+    <footer className="mx-auto mt-8 flex max-w-4xl flex-col items-center gap-2 px-4 pb-6 text-center">
+      {isRealAdmin && (
+        <div className="w-full max-w-xs">
+          <ToggleSwitch
+            id="view-mode"
+            label="Admin view"
+            granted={viewMode === 'admin'}
+            onToggle={(checked) => setViewMode(checked ? 'admin' : 'member')}
+            onLabel="Admin"
+            offLabel="Member"
+          />
+        </div>
+      )}
       <Dialog.Root>
         <Dialog.Trigger asChild>
           <button
