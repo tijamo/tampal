@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.2.21",
+    "message": "Remove Meetings tab/page access for register_taker",
+    "date": "2026-07-23T16:39:16+00:00",
+    "hash": "5235685"
+  },
+  {
     "version": "0.2.20",
     "message": "Make the admin preview switch a 3-way Member/Register Taker/Admin selector",
     "date": "2026-07-23T16:24:28+00:00",

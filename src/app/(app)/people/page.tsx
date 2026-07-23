@@ -29,6 +29,9 @@ export default async function PeoplePage() {
           <LinkButton variant="secondary" href="/people/import">
             Import
           </LinkButton>
+          <LinkButton variant="secondary" href="/audit-log">
+            Audit log
+          </LinkButton>
           <LinkButton href="/people/new">Add person</LinkButton>
         </div>
       </div>
